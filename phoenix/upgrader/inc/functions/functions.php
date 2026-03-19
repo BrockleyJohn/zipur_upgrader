@@ -117,7 +117,7 @@
      *
      * @return string
      */
-    function zipButton( $text, $class, $link, $icon = '', $size = 'lg', $id = '' ) {
+    function zipButton( $text, $class, $link, $icon = '', $size = 'lg', $id = '', $params = [] ) {
 
         $buttoncode = '';
 
@@ -134,7 +134,13 @@
             $buttoncode .= $text . '</button>';
         } else {
             $buttoncode .= '<a ' . $extrahtml . ' class="m-2 mr-4 pr-4 pl-2 btn btn-' . $size . ' btn-' . $class;
-            $buttoncode .= '" href="' . $link . '">';
+            $buttoncode .= '" href="' . $link . '"';
+            if ( ! empty( $params ) ) {
+                foreach ( $params as $key => $val ) {
+                    $buttoncode .= ' data-' . $key . '="' . $val . '"';
+                }
+            }
+            $buttoncode .= '>';
             if ( ! empty( $icon ) ) {
                 $buttoncode .= '<i class="pr-2 pl-2 mr-1 fas ' . $icon . '"></i> ';
             }
@@ -645,6 +651,8 @@
                 $upgrade['files'] = false;
             }
 
+        } else {
+            error_log( 'Upgrade file for version ' . $version . ' is missing.' );
         }
 
         return $upgrade;
@@ -718,6 +726,51 @@
 
             } else {
                 echo '<li class="list-group-item align-middle" style="padding: 2px 8px;"><i class="fas fa-puzzle-piece"></i> ' . TEXT_NO_DISABLE_CHANGES . '</li>';
+            }
+            echo '</ul>';
+
+            if ( ! empty( $output_buffer ) ) {
+//                flush();
+//                ob_flush();
+            }
+
+            echo '<ul class="list-group mt-4">';
+            if ( ! empty( $upgrade['sql'] ) ) {
+
+                try {
+
+                foreach ( $upgrade['settings']['sql'] as $sql_datum ) {
+
+                    $icon = '';
+                    //&& empty( $upgrade['conflict'] ) && ! empty( $upgrade['installed'] )
+                    if ( $process ) {
+
+                        if ( ! empty( $sql_datum['check_key'] ) ) {
+                            $query = mysqli_query( $db, "DELETE FROM configuration WHERE configuration_key = '{$sql_datum['check_key']}';" );
+                        }
+
+                        //error_log("SQL statement: '{$sql_datum['action']}'");
+                        //error_log("escaped SQL statement: '" . mysqli_real_escape_string( $db, $sql_datum['action'] ) . "'");
+                        //$query = mysqli_query( $db, mysqli_real_escape_string( $db, $sql_datum['action'] ) );
+                        $query = mysqli_query( $db, $sql_datum['action'] );
+
+                        $icon  = ' <i class="fas fa-check text-success"></i> ';
+
+                    }
+
+                    echo '<li class="list-group-item align-middle" style="padding: 2px 8px;"><i class="fas fa-database"></i> ' . $icon . '<small>' . $sql_datum['action'] . '</small></li>';
+                }
+
+                } catch ( mysqli_sql_exception $e ) {
+                    echo '<li class="list-group-item align-middle" style="padding: 2px 8px;"><i class="fas fa-database"></i> <span class="text-danger">' . TEXT_SQL_ERROR . '</span><br/><small>' . $e->getMessage() . '</small></li>';
+                    error_log( 'SQL error during upgrade: ' . $e->getMessage() . "\n" . 'Offending SQL: ' . $sql_datum['action'] );
+                    $upgrade['installed'] = false;
+                    // don't do any more on this update to support resolve and rerun
+                    return; 
+                }
+
+            } else {
+                echo '<li class="list-group-item align-middle" style="padding: 2px 8px;"><i class="fas fa-database"></i> ' . TEXT_NO_DATABASE_CHANGES . '</li>';
             }
             echo '</ul>';
 
@@ -807,38 +860,6 @@
             } else {
                 echo '<li class="list-group-item align-middle" style="padding: 2px 8px;"><i class="fas fa-file-alt"></i> ' . TEXT_NO_FILE_CHANGES . '</li>';
 
-            }
-            echo '</ul>';
-
-            if ( ! empty( $output_buffer ) ) {
-//                flush();
-//                ob_flush();
-            }
-
-            echo '<ul class="list-group mt-4">';
-            if ( ! empty( $upgrade['sql'] ) ) {
-
-                foreach ( $upgrade['settings']['sql'] as $sql_datum ) {
-
-                    $icon = '';
-                    //&& empty( $upgrade['conflict'] ) && ! empty( $upgrade['installed'] )
-                    if ( $process ) {
-
-                        if ( ! empty( $sql_datum['check_key'] ) ) {
-                            $query = mysqli_query( $db, "DELETE FROM configuration WHERE configuration_key = '{$sql_datum['check_key']}';" );
-                        }
-
-                        $query = mysqli_query( $db, $sql_datum['action'] );
-
-                        $icon  = ' <i class="fas fa-check text-success"></i> ';
-
-                    }
-
-                    echo '<li class="list-group-item align-middle" style="padding: 2px 8px;"><i class="fas fa-database"></i> ' . $icon . '<small>' . $sql_datum['action'] . '</small></li>';
-                }
-
-            } else {
-                echo '<li class="list-group-item align-middle" style="padding: 2px 8px;"><i class="fas fa-database"></i> ' . TEXT_NO_DATABASE_CHANGES . '</li>';
             }
             echo '</ul>';
 
@@ -1098,5 +1119,37 @@
             return true;
         }
 
+    }
+    
+    /**
+     * @param string $path, $catalogfile
+     *
+     * @return array admin menu loc, key
+     */
+    function moduleDetails( $path, $catalogfile ) {
+
+        $fp = @fopen( $path . $catalogfile, 'r' );
+        if ( false === $fp ) {
+            throw new Exception( 'File not found: ' . $catalogfile );
+        }
+        $class_name = $key_prefix = '';
+        $i = 0;
+        while ( ( $line = fgets( $fp ) ) !== false && $i < 100 && ( empty( $class_name ) || empty( $key_prefix ) ) ) {
+            if ( strpos( $line, 'class ' ) !== false ) {
+                $class_name = rtrim( explode( ' ', trim( str_replace( [ 'class ' ], '', $line ) ) )[0], '{' );
+            }
+            if ( strpos( $line, 'CONFIG_KEY_BASE' ) !== false ) {
+                $key_prefix = trim( str_replace( [ 'const', 'CONFIG_KEY_BASE', '=', ';' ], '', $line ) );
+            }
+            $i++;
+        }
+        fclose( $fp );
+        if ( empty( $class_name ) || empty( $key_prefix ) ) {
+            throw new Exception( 'Could not find class name or key prefix in file: ' . $catalogfile );
+        }
+        $module_path = str_replace( ['includes/', basename($catalogfile) ], '', $catalogfile );
+        $module_path = 'admin &gt;' . str_replace( '/', ' &gt; ', $module_path ) . $class_name;
+        
+        return [ 'module_path' => $module_path, 'class_name' => $class_name, 'key_prefix' => $key_prefix ];
     }
 

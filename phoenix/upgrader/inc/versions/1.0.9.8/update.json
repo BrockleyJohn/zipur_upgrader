@@ -1,0 +1,17 @@
+{
+    "required_modules_remove": [],
+    "required_modules_install": [],
+    "optional_modules_install": [
+		"includes/modules/content/index/cm_i_modular.php",
+		"includes/modules/pi/index/i_adverts.php",
+		"includes/modules/pi/index/i_brand_icons.php",
+		"includes/modules/pi/index/i_hero.php",
+		"includes/modules/content/info/cm_info_modular.php",
+		"includes/modules/pi/info/ip_text.php",
+
+    ],
+    "optional_files_delete": [],
+    "required_files_delete": [
+		"templates/bootstrap5/includes/languages/english/system/versioned/1.0.7.other/1.0.7.12/product.php",
+	]
+}

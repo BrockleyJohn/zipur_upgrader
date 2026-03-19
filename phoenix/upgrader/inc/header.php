@@ -116,11 +116,16 @@
                 $cep_version = trim( $cep_version );
 
                 require( 'inc/versions/controller.php' );
+                //error_log('versions ' . print_r($versions, true));
+                error_log('config ' . print_r($config, true));
+                /*error_log('cep_version ' . print_r($cep_version, true));
+                error_log('compare result ' . version_compare( "{$config['next_version']}", "{$cep_version}" )); */
 
                 if ( ! empty( $config['next_version'] ) && version_compare( "{$config['next_version']}", "{$cep_version}" ) > 0 ) {
                     $next_version = $config['next_version'];
                 } else {
                     foreach ( $versions as $ver_check ) {
+                        //error_log('checking version ' . $ver_check['version']);
                         if ( version_compare( "{$ver_check['version']}", "{$cep_version}" ) >= 1 ) {
 
                             $num_versions ++;
@@ -160,6 +165,7 @@
             <meta http-equiv="X-UA-Compatible" content="IE=edge">
             <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
             <title>CE Phoenix Upgrader Utility</title>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
             <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/redmond/jquery-ui.css">
             <link rel="stylesheet"
                   href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.0/css/bootstrap.min.css"
@@ -167,6 +173,19 @@
             <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css"
                   integrity="sha512-1PKOgIY59xJ8Co8+NE6FZ+LOAZKjy+KY8iq0G4B3CyeY6wYHN3yt9PW0XpSriVlkMXe40PTKnXrLnZ9+fkDaog=="
                   crossorigin="anonymous"/>
+            <style>
+                .diff-container { font-family: Arial, sans-serif; margin: 20px; }
+                .diff-container { display: flex; gap: 20px; }
+                .diff-container .code-block { width: 50%; border: 1px solid #ccc; background: #fafafa; overflow-x: auto; padding: 10px; }
+                .diff-container table { border-collapse: collapse; width: 100%; }
+                .diff-container td.line-num { width: 40px; background: #f6f8fa; color: #999; text-align: right; padding: 0 5px; border-right: 1px solid #ddd; }
+                .diff-container td.code { padding: 0 10px; white-space: pre; vertical-align: top; }
+                .diff-container ins { background-color: #e6ffed; text-decoration: none; }
+                .diff-container del { background-color: #ffeef0; text-decoration: none; }
+                .diff-container pre { margin: 0; }
+                .diff-container h2 { margin-bottom: 10px; }
+                .diff-container button { padding: 8px 12px; margin-bottom: 15px; cursor: pointer; }
+            </style>
             <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"
                     integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
             <script
@@ -180,19 +199,19 @@
         <div id="contentText" class="col p-2">
         <div class="row">
             <div class="col" style="text-align: left; padding: 0px 40px; margin-bottom: 10px;">
-                Subscribe to my <a href="https://www.youtube.com/user/zipurman"
+                Check out Preston's <a href="https://www.youtube.com/user/zipurman"
                                    target="_blank">YouTube Channel</a> for Instructions on this tool and more!
             </div>
             <div class="col" style="text-align: right; padding: 0px 40px; margin-bottom: 10px;">
-                This tool created by @zipurman (<a href="https://PhoenixAddons.com"
-                                                   target="_blank">PhoenixAddons.com</a>)
+                This tool created by @zipurman (<a href="https://PhoenixAddons.com" target="_blank">PhoenixAddons.com</a>)
+                Now maintained by @BrockleyJohn (<a href="https://cartmart.uk" target="_blank">cartmart.uk</a>)
             </div>
         </div>
         <div class="bg-dark text-light p-4 m-0 mw-100 rounded">
             <div class="row">
                 <div class="col-sm">
-                    <a href="https://phoenixaddons.com" target="_blank"><img
-                                src="https://phoenixaddons.com/wp-content/uploads/2020/08/CE-Phoenix_Addons_logo2.png"
+                    <a href="https://cartmart.uk" target="_blank"><img
+                                src="https://cartmart.uk/images/CE-Phoenix_Addons_cartmart_logo.png"
                                 style="width: 220px;"></a>
                 </div>
                 <div class="col-sm text-center">

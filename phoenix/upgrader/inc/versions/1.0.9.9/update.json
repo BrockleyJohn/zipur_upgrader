@@ -1,0 +1,22 @@
+{
+    "required_modules_remove": [],
+    "required_modules_install": [],
+    "optional_modules_install": [
+      "includes/modules/pi/product_info/pi_gallery_images.php",
+      "includes/modules/pi/product_info/pi_date_available.php",
+      "includes/modules/content/testimonials/cm_t_write.php"
+    ],
+    "optional_files_delete": [
+      "images/sample/apple-1.jpg",
+      "images/sample/apple-pears.jpg",
+      "images/sample/citrus.jpg",
+      "images/sample/fruit.jpg",
+      "images/sample/grapefruit-1.jpg",
+      "images/sample/green-apple-1.jpg",
+      "images/sample/green-tomatoes-1.jpg",
+      "images/sample/lemon-1.jpg",
+      "images/sample/lime-1.jpg",
+      "images/sample/orange-1.jpg"
+    ],
+    "required_files_delete": []
+}

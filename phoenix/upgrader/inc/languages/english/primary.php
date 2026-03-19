@@ -40,6 +40,8 @@
     const TEXT_FAILED         = 'Failed';
     const TEXT_SUCCESSFUL     = 'Successful';
     const TEXT_SAVED          = 'Changes Saved';
+    const TEXT_CLOSE          = 'Close';
+    const TEXT_BUTTON_DIFFS   = 'DIFFS';
     const TEXT_BUTTON_BACK    = 'BACK';
     const TEXT_BUTTON_NEXT    = 'NEXT';
     const TEXT_BUTTON_PROCEED = 'PROCEED';
@@ -82,6 +84,7 @@
     const TEXT_STEP_07_DESCRIPTION = 'This step will download a full core copy of your current CE Phoenix version and then compare it to your installed version. This will allow the upgrade utility to warn of any core files that will be upgraded that would change your customizations.';
     const TEXT_STEP_08_DESCRIPTION = 'Checking changed core files...';
     const TEXT_STEP_08_WARNING     = 'The following CORE FILES were changed in your current store. This means that some code in these files have changed since they were installed. The upgrade utility has saved these files and will warn you if these files will be replaced as you upgrade. Any extra files that were added to your store that were not in the CORE will also be monitored and you will be warned if they will be adjusted.';
+    const TEXT_STEP_08_NO_ALTERED_FILES = 'No core files were altered from the standard Phoenix Cart distribution. You can proceed with the upgrade without concern for losing store customizations.';
 
     const TEXT_STEP_09_DESCRIPTION      = 'Check configuration table for duplicates. Some old code may have created duplicates in your data. This will check to see if any exist and will allow you to fix prior to upgrading. If you do not resolve duplicates, future versions of CE Phoenix may throw errors as result and your store will not load.';
     const TEXT_STEP_09_NO_DUPLICATES    = 'NO DUPLICATES FOUND';
@@ -90,7 +93,7 @@
     const TEXT_DELETE                   = 'DELETE';
     const TEXT_DISABLE_MODULE                   = 'DISABLE MODULE';
     const TEXT_REMOVED_MODULE                   = 'REMOVED MODULE';
-    const TEXT_ENABLE_MODULE                   = 'ENABLE MODULE IF NEEDED - You will have to do this manually in your store admin.';
+    const TEXT_ENABLE_MODULE                   = 'ENABLE MODULE IF NEEDED - check the module is installed and enabled.';
     const TEXT_DELETE_FAILED                   = 'DELETE FAILED';
     const TEXT_MOVE_FAILED                   = 'MOVE FAILED';
     const TEXT_SKIP_NOT_USED                  = 'SKIPPING ... NOT USED';
@@ -121,6 +124,7 @@
     const TEXT_UPGRADE_FAILED      = 'The upgrade has failed. Review the comments above in order to re-run the failed items.';
     const TEXT_UPGRADE_PASSED      = 'The upgrade has completed.';
     const TEXT_UPGRADE_BROKEN      = 'The upgrade folder is missing data.';
+    const TEXT_SQL_ERROR           = 'SQL ERROR - CHECK LOGS FOR FULL DETAILS';
 
     const TEXT_STEP_11_DESCRIPTION = 'Below is the output from your upgrade to ';
 

@@ -118,7 +118,7 @@
                         zipDashListItem( TEXT_STEP_03_CONFIRM_SERVER . ' ' . $teststatus, 5, 6, $limitstep );
 
                         $upgradetext = '';
-                        if ( $config['limitstep'] >= 8 && !empty($config['core_changed_files'])) {
+                        if ( $config['limitstep'] >= 8 && (!empty($config['core_changed_files']) || !empty($config['core_added_files']))) {
                             $upgradetext = '<i class="fas fa-check text-success"></i>';
                         }
 

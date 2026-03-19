@@ -1,0 +1,2 @@
+UPDATE configuration SET set_function = NULL WHERE configuration_key REGEXP '_MODULAR_[ABCDEFGHI]_WIDTH$';
+UPDATE configuration SET configuration_value = CONCAT('col-sm-', configuration_value) WHERE configuration_key REGEXP '_MODULAR_[ABCDEFGHI]_WIDTH$';

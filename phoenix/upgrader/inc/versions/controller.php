@@ -1,6 +1,8 @@
 <?php
 
     $versions   = [];
+
+    /* enough of this hardcoding, let's just get the versions from the directory 
     $versions[] = [ 'version' => '1.0.0.1', 'active' => true, ];
     $versions[] = [ 'version' => '1.0.0.2', 'active' => true, ];
     $versions[] = [ 'version' => '1.0.0.3', 'active' => true, ];
@@ -95,3 +97,13 @@
     $versions[] = [ 'version' => '1.0.9.3', 'active' => true, ];
     $versions[] = [ 'version' => '1.0.9.4', 'active' => true, ];
     $versions[] = [ 'version' => '1.0.9.5', 'active' => true, ];
+    */
+    // get subdirectories of inc/versions/
+    $dir = __DIR__ ;
+    $subdirs = array_filter(glob($dir . '/*'), 'is_dir');
+    foreach ($subdirs as $subdir) {
+        $version = basename($subdir);
+        if (preg_match('/^\d+\.\d+\.\d+\.\d+$/', $version)) {
+            $versions[] = [ 'version' => $version, 'active' => true, ];
+        }
+    }

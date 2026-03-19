@@ -49,12 +49,15 @@
                             }
                         }
 
+                        $extracted_folder = 'inc/clean_core/';
+
                         if ( ! empty( $okset ) ) {
                             $ziparch = class_exists('ZipArchive');
 
-                            if ( version_compare( '1.0.8.0', trim( $cep_version ) ) <= 0 ) {
-                                $newurl      = 'https://codeload.github.com/CE-PhoenixCart/PhoenixCart/zip/' . trim( $cep_version );
-                                $versionpath = 'PhoenixCart-';
+                            if ( version_compare( '1.0.8.0', trim( $cep_version ) ) <= 0 /*|| version_compare( '1.1.0.0', trim( $cep_version ) ) >= 0*/ ) {
+                                //$newurl      = 'https://codeload.github.com/CE-PhoenixCart/PhoenixCart/zip/' . trim( $cep_version );
+                                $newurl      = 'https://api.github.com/repos/CE-PhoenixCart/PhoenixCart/zipball/v' . trim( $cep_version );
+                                $versionpath = 'CE-PhoenixCart-PhoenixCart-';
 
                             } else {
                                 $newurl      = 'https://codeload.github.com/gburton/CE-Phoenix/zip/' . trim( $cep_version );
@@ -69,13 +72,17 @@
                             curl_setopt( $ch, CURLOPT_URL, $newurl );
                             curl_setopt( $ch, CURLOPT_RETURNTRANSFER, false );
                             curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, false );
+                            curl_setopt( $ch, CURLOPT_FOLLOWLOCATION, true );
                             curl_setopt( $ch, CURLOPT_CONNECTTIMEOUT, 10 );
+                            curl_setopt( $ch, CURLOPT_USERAGENT, 'PhoenixUpgrader/' . $zipFileVersion );
                             curl_setopt( $ch, CURLOPT_FILE, $fp );
                             curl_exec( $ch );
+                            $info = curl_getinfo($ch);
                             curl_close( $ch );
                             fclose( $fp );
+                            error_log('Download info: ' . print_r($info, true));
 
-                            if ( ! file_exists( $newpath ) ) {
+                            if ( $info['http_code'] !== 200 && $info['http_code'] !== 302 || ! file_exists( $newpath ) ) {
                                 echo '<span class="text-danger">' . ZIPUR_CODE_COMPARE_DOWNLOAD_ERROR . ' (' . $versionpath . trim( $cep_version ) . $zipext . ')</span>';
                                 $okset = 0;
                             } else {
@@ -102,6 +109,15 @@
                                     echo '<br/><span class="text-success">' . ZIPUR_CODE_COMPARE_UNZIP_SUCCESS . '</span>';
                                 }
 
+                                // lets get the actual folder name that was extracted (when using github api the folder name is not consistent so we need to find it)
+                                $files = scandir('inc/clean_core/');
+                                foreach ($files as $file) {
+                                    if (is_dir('inc/clean_core/' . $file) && strpos($file, $versionpath) === 0) {
+                                        $extracted_folder = 'inc/clean_core/' . $file;
+                                        break;
+                                    }
+                                }
+                                error_log('Extracted folder: ' . $extracted_folder);
                             }
                         }
 
@@ -144,7 +160,10 @@
                         ];
 
                         //setup array for clean core (same version)
-                        zipGetCoreArray( 'inc/clean_core/' . $versionpath . trim( $cep_version ), $exclude2, 1 );
+                        //zipGetCoreArray( 'inc/clean_core/' . $versionpath . trim( $cep_version ), $exclude2, 1 );
+                        zipGetCoreArray( $extracted_folder, $exclude2, 1 );
+
+                        //error_log('clean core files: ' . print_r($cleancorefiles, true));
 
                         foreach ( $installedfiles as $installedfilekey => $installedfile ) {
                             if ( empty( $cleancorefiles[ $installedfilekey ] ) ) {
@@ -157,10 +176,15 @@
 
                         echo '<ul class="list-group">';
 
+                        $b = 0;
                         foreach ( $zip_altered_files as $zip_added_file ) {
 
-                            echo '<li class="list-group-item align-middle">' . $zip_added_file . '</li>';
+                            echo '<li class="list-group-item align-items-center justify-content-between d-flex py-1">' . $zip_added_file . ' ' . zipButton(TEXT_BUTTON_DIFFS, 'secondary btn-diff', '#', 'fa-compress-alt', 'md', 'diffs' . $b, ['filename' => $zip_added_file]) . '</li>';
+                            $b++;
 
+                        }
+                        if ( $b == 0 ) {
+                            echo '<li class="list-group-item">' . TEXT_STEP_08_NO_ALTERED_FILES . '</li>';
                         }
                         echo '</ul>';
 
@@ -186,6 +210,115 @@
                     ?>
                 </div>
             </div>
+<script>
+let oldCode, newCode;
+</script>
+<div class="modal" tabindex="-1" id="diffModal">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="diffModalTitle"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" data-dismiss="modal" aria-label="<?= TEXT_CLOSE ?>"> X </button>
+      </div>
+      <div class="modal-body" id="modalBody">
+        <div class="diff-container">
+            <div class="code-block"><pre><code id="oldOutput" class="php"></code></pre></div>
+            <div class="code-block"><pre><code id="newOutput" class="php"></code></pre></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-dismiss="modal"><?= TEXT_CLOSE ?></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Diff Match Patch JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/diff_match_patch/20121119/diff_match_patch.js"></script>
+<!-- Highlight.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/php.min.js"></script>
+<script>
+    document.querySelectorAll('.btn-diff').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const filename = this.getAttribute('data-filename');
+            //fetch(`diff.php?file=${encodeURIComponent(filename)}`)
+            fetch(`diff.php`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `file=${encodeURIComponent(filename)}`,
+            })
+                .then(response => response.text())
+                .then(diffHtml => {
+                    document.getElementById('diffModalTitle').textContent = `${filename}`;
+                    let script = document.createElement('script');
+                    script.textContent = diffHtml;
+                    document.getElementById('modalBody').appendChild(script);
+                    new bootstrap.Modal(document.getElementById('diffModal')).show();
+                    createDiff();
+                })
+                .catch(error => {
+                    document.getElementById('diffModalTitle').textContent = 'Error';
+                    document.getElementById('modalBody').textContent = 'Could not load diff: ' + error;
+                    new bootstrap.Modal(document.getElementById('diffModal')).show();
+                });
+        });
+    });
+
+function createDiff() {
+    const dmp = new diff_match_patch();
+    const diffOld = dmp.diff_main(oldCode, newCode);
+    const diffNew = dmp.diff_main(newCode, oldCode);
+
+    dmp.diff_cleanupSemantic(diffOld);
+    dmp.diff_cleanupSemantic(diffNew);
+
+    // Convert to HTML with inline highlights
+    document.getElementById('oldOutput').innerHTML = dmp.diff_prettyHtml(diffOld);
+    document.getElementById('newOutput').innerHTML = dmp.diff_prettyHtml(diffNew);
+
+    hljs.highlightAll();
+}
+
+function renderTable(tableId, diff) {
+    const table = document.getElementById(tableId);
+    table.innerHTML = '';
+    const lines = diff_prettyLines(diff);
+
+    lines.forEach((line, index) => {
+        const tr = document.createElement('tr');
+
+        const tdNum = document.createElement('td');
+        tdNum.className = 'line-num';
+        tdNum.textContent = index + 1;
+
+        const tdCode = document.createElement('td');
+        tdCode.className = 'code';
+        tdCode.innerHTML = `<pre><code class="php">${line}</code></pre>`;
+
+        tr.appendChild(tdNum);
+        tr.appendChild(tdCode);
+        table.appendChild(tr);
+    });
+}
+
+function diff_prettyLines(diff) {
+    const html = [];
+    diff.forEach(part => {
+        let text = part[1].replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        if (part[0] === 1) { // Added
+            text = `<ins>${text}</ins>`;
+        } else if (part[0] === -1) { // Removed
+            text = `<del>${text}</del>`;
+        }
+        html.push(text);
+    });
+    return html.join('').split("\n");
+}
+</script>
 
             <?php
         }
