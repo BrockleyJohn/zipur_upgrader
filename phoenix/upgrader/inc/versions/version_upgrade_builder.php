@@ -19,12 +19,16 @@
                 if (isset($json['required_modules_remove']) && is_array($json['required_modules_remove']) && count($json['required_modules_remove']) > 0) {
                     // Preston has written the current disable to require the key prefix... need to get it from the file
                     foreach ($json['required_modules_remove'] as $module) {
-                        $module_details = moduleDetails( $zip_cep_root, $module);
-                        $this_upgrade['disable'][] = [
-                            'file' => $module,
-                            'name' => $module_details['module_path'],
-                            'key' => $module_details['key_prefix'],
-                        ];
+                        try {
+                            $module_details = moduleDetails( $zip_cep_root, $module);
+                            $this_upgrade['disable'][] = [
+                                'file' => $module,
+                                'name' => $module_details['module_path'],
+                                'key' => $module_details['key_prefix'],
+                            ];
+                        } catch (Exception $e) { // if it's not there already, we can just move on... but log the error just in case
+                            error_log('Error processing required_modules_remove for module ' . $module . ': ' . $e->getMessage());
+                        }
                     }
                 }
                 if (isset($json['required_modules_install']) && is_array($json['required_modules_install']) && count($json['required_modules_install']) > 0) {
@@ -35,7 +39,6 @@
                             'file' => $module,
                             'name' => $module_details['module_path'],
                             'key' => $module_details['key_prefix'],
-                            'force' => true
                         ];
                     }
                 }

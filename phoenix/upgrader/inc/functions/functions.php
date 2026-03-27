@@ -608,51 +608,63 @@
         $upgrade['conflict']  = false;
         $upgrade['installed'] = false;
 
-        if ( file_exists( $upgrades ) && file_exists( $upgrades . 'upgrade.php' ) ) {
+        //if ( file_exists( $upgrades ) && file_exists( $upgrades . 'upgrade.php' ) ) {
+        if ( file_exists( $upgrades ) ) {
+            
+            if (! file_exists( $upgrades . 'upgrade.php' ) ) {
 
-            $upgrade['exists']    = true;
-            $upgrade['conflict']  = false;
-            $upgrade['installed'] = false;
-
-            require( $upgrades . 'upgrade.php' );
-
-            $upgrade['settings'] = $this_upgrade;
-
-            if ( empty( $upgrade['settings']['title'] ) ) {
-                $upgrade['settings']['title'] = 'Upgrade to ' . $version;
-            }
-            if ( empty( $upgrade['settings']['delete'] ) ) {
-                $upgrade['settings']['delete'] = [];
+                fetchUpgradeFiles( $version );
             }
 
-            if ( empty( $upgrade['settings']['disable'] ) ) {
-                $upgrade['settings']['disable'] = [];
-            }
+            if ( file_exists( $upgrades . 'upgrade.php' ) ) {
 
-            if ( empty( $upgrade['settings']['enable'] ) ) {
-                $upgrade['settings']['enable'] = [];
-            }
+                $upgrade['exists']    = true;
+                $upgrade['conflict']  = false;
+                $upgrade['installed'] = false;
 
-            if ( ! empty( $upgrade['settings']['sql'] ) ) {
-                $upgrade['sql'] = true;
+                require( $upgrades . 'upgrade.php' );
+
+                $upgrade['settings'] = $this_upgrade;
+
+                if ( empty( $upgrade['settings']['title'] ) ) {
+                    $upgrade['settings']['title'] = 'Upgrade to ' . $version;
+                }
+                if ( empty( $upgrade['settings']['delete'] ) ) {
+                    $upgrade['settings']['delete'] = [];
+                }
+
+                if ( empty( $upgrade['settings']['disable'] ) ) {
+                    $upgrade['settings']['disable'] = [];
+                }
+
+                if ( empty( $upgrade['settings']['enable'] ) ) {
+                    $upgrade['settings']['enable'] = [];
+                }
+
+                if ( ! empty( $upgrade['settings']['sql'] ) ) {
+                    $upgrade['sql'] = true;
+                } else {
+                    $upgrade['sql'] = false;
+                }
+
+                if ( file_exists( $upgrades . 'files' ) ) {
+                    $upgrade['files'] = true;
+
+                    $exclude      = [ 'install', ];
+                    $upgradefiles = [];
+                    zipGetCoreArray( 'inc' . $ds . 'versions' . $ds . $version . $ds . 'files', $exclude, 3 );
+                    $upgrade['upgrade_files'] = $upgradefiles;
+
+                } else {
+                    $upgrade['files'] = false;
+                }
+
             } else {
-                $upgrade['sql'] = false;
-            }
-
-            if ( file_exists( $upgrades . 'files' ) ) {
-                $upgrade['files'] = true;
-
-                $exclude      = [ 'install', ];
-                $upgradefiles = [];
-                zipGetCoreArray( 'inc' . $ds . 'versions' . $ds . $version . $ds . 'files', $exclude, 3 );
-                $upgrade['upgrade_files'] = $upgradefiles;
-
-            } else {
-                $upgrade['files'] = false;
+                error_log( 'Upgrade file for version ' . $version . ' is missing.' );
             }
 
         } else {
-            error_log( 'Upgrade file for version ' . $version . ' is missing.' );
+            error_log( 'Upgrade directory for version ' . $version . ' is missing.' );
         }
 
         return $upgrade;
@@ -1153,3 +1165,152 @@
         return [ 'module_path' => $module_path, 'class_name' => $class_name, 'key_prefix' => $key_prefix ];
     }
 
+    /**
+     * @param string $version
+     *
+     * @return array next version, available updates
+     */
+    function cartmartCheckVersion( $version ) {
+
+        $return = callCartmart( $version, '' );
+        if ( $return['httpcode'] == 200 ) {
+            $response = json_decode( $return['response'], true );
+            error_log('Cartmart response: ' . print_r($response, true));
+            if ( ! empty( $response['next_version'] )  ) {
+                return [ $response['next_version'], $response['later'] ?? [] ];
+            } else {
+                throw new Exception( 'Invalid response from Cartmart: ' . $return['response'] );
+            }
+        } else {
+            throw new Exception( 'Error connecting to Cartmart. HTTP code: ' . $return['httpcode'] );
+        }
+    }
+
+    /**
+     * @param string $version, $action
+     *
+     * @return array
+     */
+    function callCartmart( $version, $action ) {
+
+        $url = 'https://cartmart.uk/api/coreupdates/' . $version;
+        if (! empty($action)) $url .= '?' . http_build_query($query);
+        $headers[] = 'Content-Type: application/json';
+        $headers[] = 'Accept: application/json';
+        $headers[] = 'X-Cartmart-Upgrades-Site: ' .  HTTP_SERVER . DIR_WS_CATALOG;
+        $headers[] = 'X-Cartmart-Upgrader-Ver: ' .  $GLOBALS['zipFileVersion'];
+        $ch = curl_init($url);
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+        $response = curl_exec($ch);
+        $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        $info = curl_getinfo($ch);
+        curl_close($ch);
+        return ['httpcode' => $httpcode, 'response' => $response, 'curlinfo' => $info];
+    }    
+
+    /**
+     * @param string $version
+     *
+     * @return void
+     */
+    function fetchUpgradeFiles( $version ) {
+
+        $okset = 1;
+
+        $ziparch = class_exists('ZipArchive');
+        $version_folder = 'inc/versions/' . $version;
+        if ( ! is_dir( $version_folder ) ) {
+            throw new Exception( TEXT_VERSION_DIRECTORY_CREATE_FAILED);
+        }
+        $version_folder .= '/';
+        $work_folder = 'inc/update_work';
+        if ( ! is_dir( $work_folder ) ) {
+            if (! mkdir( $work_folder, 0700, true ) ) {
+                throw new Exception( TEXT_WORK_DIRECTORY_CREATE_FAILED);
+            }
+        } else {
+            // clean up any old stuff in work folder
+            $files = glob($work_folder . '/*'); // get all file names
+            foreach ($files as $file) {
+                if (is_file($file)) {
+                    unlink($file); // delete file
+                } else if ($file != "." && $file != ".." && is_dir($file)) {
+                    zipDeleteDirectory($file); // delete directory and its contents
+                }
+            }
+        }
+        $work_folder .= '/';
+
+        $version_url = 'https://api.github.com/repos/BrockleyJohn/core_updates/zipball/v' . $version;
+        $zipext = $ziparch ? '.zip' : '.tar.gz';
+        $version_zip = $work_folder . 'upgrade' . $zipext;
+
+        $fp      = fopen( $version_zip, 'w+' );
+        $ch      = curl_init();
+        curl_setopt( $ch, CURLOPT_URL, $version_url );
+        curl_setopt( $ch, CURLOPT_RETURNTRANSFER, false );
+        curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, false );
+        curl_setopt( $ch, CURLOPT_FOLLOWLOCATION, true );
+        curl_setopt( $ch, CURLOPT_CONNECTTIMEOUT, 10 );
+        curl_setopt( $ch, CURLOPT_USERAGENT, 'PhoenixUpgrader/' . $GLOBALS['zipFileVersion'] );
+        curl_setopt( $ch, CURLOPT_FILE, $fp );
+        curl_exec( $ch );
+        $info = curl_getinfo($ch);
+        curl_close( $ch );
+        fclose( $fp );
+        error_log('Download info: ' . print_r($info, true));
+
+        if ( $info['http_code'] !== 200 && $info['http_code'] !== 302 || ! file_exists( $version_zip ) ) {
+            echo '<span class="text-danger">' . sprintf(TEXT_VERSION_DOWNLOAD_FAILED, $version, $version_url, $version_zip) . '</span>';
+            $okset = 0;
+        } else {
+            echo '<span class="text-success">' . sprintf(TEXT_VERSION_DOWNLOAD_SUCCESS, $version) . '</span>';
+            if ($ziparch) {
+                $zip = new ZipArchive;
+                $res = $zip->open( $version_zip );
+                if ( $res === true ) {
+                    $zip->extractTo( $work_folder );
+                    $zip->close();
+                    echo '<br/><span class="text-success">' . sprintf(TEXT_VERSION_UNZIP_SUCCESS, $version) . '</span>';
+                    unlink( $version_zip );//deletes downloaded zip
+                } else {
+                    echo '<br/><span class="text-danger">' . sprintf(TEXT_VERSION_UNZIP_FAILED, $version_zip) . '</span>';
+                    $okset = 0;
+                }
+            } else {
+                $gz_extract = new PharData( $version_zip );
+                $gz_extract->decompress(); // creates files.tar
+                $tar_extract = new PharData( str_replace( '.gz', '', $version_zip ) );
+                $tar_extract->extractTo( $work_folder );
+                unlink( str_replace( '.gz', '', $version_zip ) );//deletes tar
+                unlink( $version_zip );//deletes downloaded zip
+                echo '<br/><span class="text-success">' . sprintf(TEXT_VERSION_UNZIP_SUCCESS, $version) . '</span>';
+            }
+            if ($okset) {
+                // Lets get the actual folder name that was extracted (when using github api the folder name is not consistent so we need to find it). Work dir contains only the extracted folder so we should be safe to just get the first folder in there
+                $files = scandir($work_folder);
+                foreach ($files as $file) {
+                    if ($file != "." && $file != ".." && is_dir($work_folder . $file)) {
+                        $extracted_folder = $work_folder . $file;
+                        break;
+                    }
+                }
+                // the next level should be /versions/ then the version number
+                if ( is_dir( $extracted_folder . '/versions/' . $version ) ) {
+                    // move the files to the correct location
+                    if (! rename( $extracted_folder . '/versions/' . $version, $version_folder ) ) {
+                        echo '<br/><span class="text-danger">' . sprintf(TEXT_VERSION_MOVE_FAILED, $version) . '</span>';
+                    } else {
+                        echo '<br/><span class="text-success">' . sprintf(TEXT_VERSION_MOVE_SUCCESS, $version) . '</span>';
+                    }
+                } else {
+                    echo '<br/><span class="text-danger">' . sprintf(TEXT_VERSION_FOLDER_NOT_FOUND, $extracted_folder . '/versions/' . $version) . '</span>';
+                }
+            }
+        }
+
+        return $okset;
+    }        

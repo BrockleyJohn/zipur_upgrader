@@ -2,6 +2,7 @@
 
     /*
 
+ Version: 2.0.0
  Name: Zipur CE Phoenix Upgrade Utility
 
  Author: Preston Lord
@@ -60,8 +61,14 @@
         $ustep = zipVarCheck( 'ustep', 0, 'FILTER_VALIDATE_INT', 0 );
 
         $output_buffer = 1;
-        if ( ! ini_get( 'output_buffering' ) ) {
-            $output_buffer = 0;
+        if ( ! ini_get( 'output_buffering' ) && ! ob_get_level() ) {
+            ob_start();
+            if ( ob_get_level() ) {
+                $output_buffer = 1;
+            } else {
+                $output_buffer = 0;
+            }
+            ob_end_flush();
         }
 
 
@@ -117,14 +124,14 @@
 
                 require( 'inc/versions/controller.php' );
                 //error_log('versions ' . print_r($versions, true));
-                error_log('config ' . print_r($config, true));
+                //error_log('config ' . print_r($config, true));
                 /*error_log('cep_version ' . print_r($cep_version, true));
                 error_log('compare result ' . version_compare( "{$config['next_version']}", "{$cep_version}" )); */
 
                 if ( ! empty( $config['next_version'] ) && version_compare( "{$config['next_version']}", "{$cep_version}" ) > 0 ) {
                     $next_version = $config['next_version'];
                 } else {
-                    foreach ( $versions as $ver_check ) {
+                    /* foreach ( $versions as $ver_check ) {
                         //error_log('checking version ' . $ver_check['version']);
                         if ( version_compare( "{$ver_check['version']}", "{$cep_version}" ) >= 1 ) {
 
@@ -134,6 +141,15 @@
                                 $next_version = $ver_check['version'];
                             }
 
+                        }
+                    } */
+                    if (empty($next_version)) {
+                        list($next_version, $available_updates) = cartmartCheckVersion($cep_version);
+                        error_log('Cartmart check result: next_version=' . $next_version . ' available_updates=' . print_r($available_updates, true));
+                        foreach ($available_updates as $update) {
+                            if (! is_dir( __DIR__ . '/versions/' . $update['version'] ) ) {
+                                mkdir( __DIR__ . '/versions/' . $update['version'], 0755 );
+                            }
                         }
                     }
                 }

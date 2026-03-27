@@ -134,6 +134,16 @@
     const ZIPUR_CODE_COMPARE_UNZIP_SUCCESS    = 'UNZIP SUCCESS';
     const ZIPUR_CODE_COMPARE_UNZIP_FAILED     = 'UNZIP FAILED';
 
+    const TEXT_VERSION_DIRECTORY_CREATE_FAILED = 'Creating Version Directory Failed! Check permissions and make sure the upgrader/inc/versions/.... directory is writable.';
+    const TEXT_WORK_DIRECTORY_CREATE_FAILED = 'Creating Work Directory Failed! Check permissions and make sure the upgrader/inc/update_work/ directory is writable.';
+    const TEXT_VERSION_DOWNLOAD_FAILED = 'DOWNLOAD ERROR - Update to %s failed to download from %s to %s.';
+    const TEXT_VERSION_DOWNLOAD_SUCCESS = 'DOWNLOAD SUCCESS - downloaded update to %s from repository.';
+    const TEXT_VERSION_FOLDER_NOT_FOUND = 'VERSION FOLDER NOT FOUND - %s';
+    const TEXT_VERSION_UNZIP_SUCCESS = 'UNZIP SUCCESS - unzipped update to %s successfully.';
+    const TEXT_VERSION_UNZIP_FAILED = 'UNZIP FAILED - failed to unzip %s.';
+    const TEXT_VERSION_MOVE_FAILED = 'MOVE FAILED - failed to move version %s files after unzip.';
+    const TEXT_VERSION_MOVE_SUCCESS = 'UPDATE TO VERSION %s FETCHED SUCCESSFULLY';
+
     const TEXT_FILES_TEST_ROOT_WRITE_IMAGES    = 'Write test file to CE Phoenix Images Directory';
     const TEXT_FILES_TEST_ROOT_DELETE_IMAGES   = 'Delete test file from CE Phoneix Images Directory';
     const TEXT_FILES_TEST_ROOT_WRITE_INCLUDES  = 'Write test file to CE Phoenix Includes Directory';

@@ -1,7 +1,6 @@
 <?php
 
     /*
-
  Name: Zipur CE Phoenix Upgrade Utility
 
  Author: Preston Lord
@@ -25,14 +24,18 @@
 
     $zipmigutil = 1;
 
-    require 'inc/header.php';
+    try {
+        require 'inc/header.php';
 
-    if ( ! empty( $step ) ) {
-        include 'inc/steps/' . $step . '.php';
+        if ( ! empty( $step ) ) {
+            include 'inc/steps/' . $step . '.php';
+        }
+
+        if ( ! empty( $require_step ) ) {
+            include 'inc/steps/' . $require_step . '.php';
+        }
+
+        require 'inc/footer.php';
+    } catch (Exception $e) {
+        echo '<div class="alert alert-danger">' . $e->getMessage() . '</div>';
     }
-
-    if ( ! empty( $require_step ) ) {
-        include 'inc/steps/' . $require_step . '.php';
-    }
-
-    require 'inc/footer.php';

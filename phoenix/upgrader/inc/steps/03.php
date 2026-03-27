@@ -132,23 +132,25 @@
 
 
 
-                        if (!empty($next_version)) {
+                        if (!empty($cep_version)) {
+                            if (!empty($next_version)) {
 
-                            $upgrade = loadUpgradeVersion( $next_version );
+                                $upgrade = loadUpgradeVersion( $next_version );
 
-                            if ( version_compare( "{$upgrade['settings']['requires']}", "{$cep_version}" ) == 0 ) {
+                                if ( version_compare( "{$upgrade['settings']['requires']}", "{$cep_version}" ) == 0 ) {
 
-                                $targettablecheck = ( $config['limitstep'] >= 10 ) ? ' <i class="fas fa-check text-success"></i>' : '';
-                                zipDashListItem( TEXT_STEP_03_UPGRADE_REVIEW . $next_version . $targettablecheck, 9, 10, $limitstep );
+                                    $targettablecheck = ( $config['limitstep'] >= 10 ) ? ' <i class="fas fa-check text-success"></i>' : '';
+                                    zipDashListItem( TEXT_STEP_03_UPGRADE_REVIEW . $next_version . $targettablecheck, 9, 10, $limitstep );
+
+                                } else {
+
+                                    zipAlert( TEXT_NO_MEET_REQUIREMENT_UPGRADES, 'success');
+
+                                }
 
                             } else {
-
-                                zipAlert( TEXT_NO_MEET_REQUIREMENT_UPGRADES, 'success');
-
+                                zipAlert( TEXT_NO_UPGRADES, 'success');
                             }
-
-                        } else {
-                            zipAlert( TEXT_NO_UPGRADES, 'success');
                         }
 
                     ?>
