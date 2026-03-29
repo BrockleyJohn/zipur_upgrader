@@ -482,7 +482,7 @@
      */
     function zipGetCoreArray( $path, $ignorefolders = [], $type = 0, $convertadmin = false ) {
 
-        global $installedfiles, $cleancorefiles, $cep_version, $config, $upgradefiles;
+        global $installedfiles, $cleancorefiles, $cep_version, $config, $upgradefiles, $extracted_folder;
 
         $ds = DIRECTORY_SEPARATOR;
 
@@ -521,13 +521,14 @@
 
                     } else if ( $type == 1 ) {
                         $keypath = $path . $ds . $file;
-                        if ( version_compare( '1.0.8.0', trim( $cep_version ) ) <= 0 ) {
+                        /* if ( version_compare( '1.0.8.0', trim( $cep_version ) ) <= 0 ) {
                             $ospath = 'PhoenixCart-';
                         } else {
                             $ospath = 'CE-Phoenix-';
                         }
 
-                        $keypath = str_replace( 'inc' . $ds . 'clean_core' . $ds . $ospath . trim( $cep_version ), '', $keypath );
+                        $keypath = str_replace( 'inc' . $ds . 'clean_core' . $ds . $ospath . trim( $cep_version ), '', $keypath ); */
+                        $keypath = str_replace( $extracted_folder, '', $keypath );
 
                         if ( $ds == '\\' ) {
                             $keypath = preg_replace( '/^\\\admin/', $admin_path . '', $keypath, 1 );
