@@ -56,10 +56,15 @@
 
       $site_code = file_exists( $site_file ) ? file_get_contents( $site_file ) : "<?php\n// Site file not found '$site_file'\n";
       $core_code = file_exists( $core_file ) ? file_get_contents( $core_file ) : "<?php\n// Core file not found '$core_file'\n";
-
-      ?>
+/*
+oldCode = escapeHTML(`<?= $core_code ?>`);
+newCode = escapeHTML(`<?= $site_code ?>`);
 oldCode = `<?= htmlspecialchars($core_code) ?>`;
 newCode = `<?= htmlspecialchars($site_code) ?>`;
+*/
+      ?>
+oldCode = `<?= $core_code ?>`;
+newCode = `<?= $site_code ?>`;
       <?php
 
     } else {

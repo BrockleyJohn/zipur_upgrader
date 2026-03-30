@@ -126,7 +126,7 @@
     const TEXT_UPGRADE_BROKEN      = 'The upgrade folder is missing data.';
     const TEXT_SQL_ERROR           = 'SQL ERROR - CHECK LOGS FOR FULL DETAILS';
 
-    const TEXT_STEP_08_DIFFS_INSTRUCTIONS = 'Site on the left, core on the right. Green code is present in this file not the other, red the opposite.';
+    const TEXT_STEP_08_DIFFS_INSTRUCTIONS = 'Site file is shown with deletions from core in red and addtions in green.';
     const TEXT_STEP_11_DESCRIPTION = 'Below is the output from your upgrade to ';
 
     const TEXT_DIRECTORY_CREATE_ERROR         = 'Creating Clean Core Directory Failed!';

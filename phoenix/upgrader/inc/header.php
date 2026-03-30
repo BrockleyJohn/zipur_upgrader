@@ -192,7 +192,7 @@
             <style>
                 .diff-container { font-family: Arial, sans-serif; margin: 20px; }
                 .diff-container { display: flex; gap: 20px; }
-                .diff-container .code-block { width: 50%; border: 1px solid #ccc; background: #fafafa; overflow-x: auto; padding: 10px; }
+                .diff-container .code-block { width: 100%; border: 1px solid #ccc; background: #fafafa; overflow-x: auto; padding: 10px; }
                 .diff-container table { border-collapse: collapse; width: 100%; }
                 .diff-container td.line-num { width: 40px; background: #f6f8fa; color: #999; text-align: right; padding: 0 5px; border-right: 1px solid #ddd; }
                 .diff-container td.code { padding: 0 10px; white-space: pre; vertical-align: top; }

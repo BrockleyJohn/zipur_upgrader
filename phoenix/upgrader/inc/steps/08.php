@@ -227,7 +227,6 @@ let oldCode = '', newCode = '';
         </div>
         <div class="diff-container">
             <div class="code-block"><pre><code id="oldOutput" class="php"></code></pre></div>
-            <div class="code-block"><pre><code id="newOutput" class="php"></code></pre></div>
         </div>
       </div>
       <div class="modal-footer">
@@ -427,7 +426,7 @@ var mergeHTMLPlugin = (function () {
 }());
     // add plugin to highlight.js
     hljs.addPlugin(mergeHTMLPlugin);
-    
+
     document.querySelectorAll('.btn-diff').forEach(button => {
         button.addEventListener('click', function(e) {
             e.preventDefault();
@@ -461,14 +460,14 @@ var mergeHTMLPlugin = (function () {
 function createDiff() {
     const dmp = new diff_match_patch();
     const diffOld = dmp.diff_main(oldCode, newCode);
-    const diffNew = dmp.diff_main(newCode, oldCode);
+    //const diffNew = dmp.diff_main(newCode, oldCode);
 
     dmp.diff_cleanupSemantic(diffOld);
-    dmp.diff_cleanupSemantic(diffNew);
+    //dmp.diff_cleanupSemantic(diffNew);
 
     // Convert to HTML with inline highlights
     document.getElementById('oldOutput').innerHTML = dmp.diff_prettyHtml(diffOld);
-    document.getElementById('newOutput').innerHTML = dmp.diff_prettyHtml(diffNew);
+    //document.getElementById('newOutput').innerHTML = dmp.diff_prettyHtml(diffNew);
 
     hljs.highlightAll();
 }
