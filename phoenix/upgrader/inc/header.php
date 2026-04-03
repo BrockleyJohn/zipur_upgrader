@@ -85,6 +85,7 @@
 
         require $inc_directory . '/config.php';
 
+        $login_failed = 0;
         if ( ! empty( $config['password'] ) ) {
             if ( $step == '999' ) {
                 $zip_login_password = zipVarCheck( 'zip_login_password', '' );
@@ -109,7 +110,8 @@
                     $justloggedin = 1;
 
                 } else {
-                    zipAlert( TEXT_LOGIN_FAILED );
+                    // zipAlert( TEXT_LOGIN_FAILED );
+                    $login_failed = 1;
                 }
             } else if ( empty( $bypass_password ) && ( empty( $_COOKIE['zip_upgrade_pw'] ) || $_COOKIE['zip_upgrade_pw'] != hash( 'sha256', $config['password'] ) ) ) {
                 $step = '999';
@@ -245,6 +247,9 @@
         </div>
         <br/>
         <?php
+            if ( ! empty( $login_failed ) ) {
+                zipAlert( TEXT_LOGIN_FAILED );
+            }
             if ( ! empty( $_COOKIE['zip_upgrade_pw'] ) || ! empty( $justloggedin ) ) {
                 ?>
                 <div class="navbar-light bg-light text-right">
