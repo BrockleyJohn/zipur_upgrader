@@ -27,6 +27,8 @@
 
     const TEXT_WELCOME_MESSAGE = 'This utility will allow you to upgrade your CE Phoenix install from an older version to the latest version of CE Phoenix. You will be shown all of the files from your current install that you have modified and then you can decide how to proceed with an upgrade.';
 
+    const TEXT_SUPPORT_LINK = '<a href="%s" target="_blank" class="btn btn-info mt-2"><i class="fas fa-life-ring"></i> Get Help</a>';
+
     const TEXT_BACKUP_WARNING            = 'MAKE SURE YOU HAVE COMPLETED A RECENT BACKUP OF YOUR DATA AND YOUR FILES BEFORE PROCEEDING.';
     const TEXT_BACKUP_NO_LIABILITY       = 'THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.';
     const TEXT_BACKUP_NO_LIABILITY_AGREE = 'By clicking the following button, you agree to the above conditions.';
@@ -47,6 +49,7 @@
     const TEXT_BUTTON_PROCEED = 'PROCEED';
     const TEXT_BUTTON_LOGIN   = 'LOGIN';
     const TEXT_BUTTON_LOGOUT  = 'LOG OUT';
+    const TEXT_BUTTON_VIEW_WORKLIST = 'VIEW WORKLIST';
     const TEXT_LOGIN_FAILED   = 'LOGIN FAILED';
 
     const MYSQL_PORT = 3306;
@@ -65,7 +68,8 @@
 
     const TEXT_STEP_03_CONFIRM_SERVER = 'Test server to make sure PHP and MySQL are setup correctly';
 
-    const TEXT_STEP_03_REVIEW_CORE = 'Review Your Core Changes <span class="text-danger">(RECOMMENDED BEFORE <u>EACH</u> UPGRADE)</span>';
+    const TEXT_STEP_03_DOWNLOAD_CORE = 'Download a clean copy of %s\'s core files to compare against your current store files to check for changes. This will allow you to review any changes you have made to core files and make informed decisions on how to proceed with the upgrade.';
+    const TEXT_STEP_03_REVIEW_CORE = 'Review Your Core Changes against %s <span class="text-danger">(RECOMMENDED BEFORE <u>EACH</u> UPGRADE)</span>';
 
     const TEXT_STEP_03_CHECK_DUPLICATES = 'Check configuration table for duplicates';
     const TEXT_STEP_03_UPGRADE_REVIEW   = 'Review upgrade to version ';
@@ -83,7 +87,8 @@
     const TEXT_STEP_06_DESCRIPTION = 'Testing your settings to make sure permissions are set correctly.';
     const TEXT_STEP_07_DESCRIPTION = 'This step will download a full core copy of your current CE Phoenix version and then compare it to your installed version. This will allow the upgrade utility to warn of any core files that will be upgraded that would change your customizations.';
     const TEXT_STEP_08_DESCRIPTION = 'Checking changed core files...';
-    const TEXT_STEP_08_WARNING     = 'The following CORE FILES were changed in your current store. This means that some code in these files have changed since they were installed. The upgrade utility has saved these files and will warn you if these files will be replaced as you upgrade. Any extra files that were added to your store that were not in the CORE will also be monitored and you will be warned if they will be adjusted.';
+    const TEXT_STEP_08_WARNING     = 'The following CORE FILES were changed in your current store. This means that some code in these files have changed since they were installed. The upgrade utility will warn you at the next step if these files will be replaced as you upgrade and will save a copy of your edited files. Any extra files that were added to your store that were not in the CORE will also be monitored and you will be warned if they will be adjusted.';
+    const TEXT_STEP_08_CURRENT_TEMPLATE = 'Your store template is currently set to: <strong>%s</strong>. If you have made customizations to your default template files, core language files or module templates, you should copy them to the active template instead.';
     const TEXT_STEP_08_NO_ALTERED_FILES = 'No core files were altered from the standard Phoenix Cart distribution. You can proceed with the upgrade without concern for losing store customizations.';
 
     const TEXT_STEP_09_DESCRIPTION      = 'Check configuration table for duplicates. Some old code may have created duplicates in your data. This will check to see if any exist and will allow you to fix prior to upgrading. If you do not resolve duplicates, future versions of CE Phoenix may throw errors as result and your store will not load.';
@@ -100,6 +105,7 @@
     const TEXT_REENABLE_MOD                  = '<span class="alert alert-danger" style="padding: 4px;">RE-ENABLE THIS MODULE IF NEEDED - You had it enabled before this upgrade.</span>';
     const TEXT_REENABLE_MOD_NO                  = 'This mod was NOT enabled prior to upgrade.';
     const TEXT_COPIED                   = 'COPIED';
+    const TEXT_BACKED_UP                = 'BACKED UP';
     const TEXT_CREATE_DIR                  = 'CREATE DIRECTORY';
     const TEXT_DELETE_NOT_NEEDED                   = 'You do not have this file in your store. Skipping Delete.';
     const TEXT_COPY_FAILED              = 'COPY FAILED';
@@ -127,7 +133,24 @@
     const TEXT_SQL_ERROR           = 'SQL ERROR - CHECK LOGS FOR FULL DETAILS';
 
     const TEXT_STEP_08_DIFFS_INSTRUCTIONS = 'Site file is shown with deletions from core in red and addtions in green.';
+    const TEXT_STEP_08_DIFFS_WORKLIST_ENTRY = 'File Worklist Entry';
+    const TEXT_STEP_08_DIFFS_WORKLIST_ADD = 'SAVE TO WORKLIST';
+    const TEXT_STEP_08_DIFFS_WORKLIST_EDIT = 'EDIT WORKLIST ENTRY';
+    const TEXT_STEP_08_DIFFS_WORKLIST_COMPLETE = 'MARK COMPLETE / IGNORE';
     const TEXT_STEP_11_DESCRIPTION = 'Below is the output from your upgrade to ';
+
+    const TEXT_WORKLIST_DONE_COLOUR = 'success';
+    const TEXT_WORKLIST_NEW_COLOUR = 'danger';
+    const TEXT_WORKLIST_TO_DO_COLOUR = 'warning';
+    const TEXT_WORKLIST_DONE_ICON = 'check-circle';
+    const TEXT_WORKLIST_NEW_ICON = 'plus-square';
+    const TEXT_WORKLIST_TO_DO_ICON = 'hourglass-half';
+    define('TEXT_WORKLIST_DONE', 'fas fa-' . TEXT_WORKLIST_DONE_ICON . ' text-' . TEXT_WORKLIST_DONE_COLOUR);
+    define('TEXT_WORKLIST_NEW', 'fas fa-' . TEXT_WORKLIST_NEW_ICON . ' text-' . TEXT_WORKLIST_NEW_COLOUR);
+    define('TEXT_WORKLIST_TO_DO', 'fas fa-' . TEXT_WORKLIST_TO_DO_ICON . ' text-' . TEXT_WORKLIST_TO_DO_COLOUR);
+    const TEXT_WORK_ITEM = 'WORK ITEM';
+
+    const TEXT_WORKLIST_EMPTY = 'Your worklist is currently empty. When you review the comparison of your diffs of your changed files, you can add items to your worklist to keep notes of the customisations you have made, any actions you need to take now or for a later update, and any progress.';
 
     const TEXT_DIRECTORY_CREATE_ERROR         = 'Creating Clean Core Directory Failed!';
     const ZIPUR_CODE_COMPARE_DOWNLOAD_ERROR   = 'DOWNLOAD ERROR';

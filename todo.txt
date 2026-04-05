@@ -1,6 +1,7 @@
-- better code compare view
-- building a work list of files to check/deal with
+- look into encrypting the password
+- DONE - better code compare view
+- DONE - building a work list of files to check/deal with
 - deal with added files
-- moving customised files to proper template locations if in shop folder structure
-- when language files are updated and custom files exist, automatically add new definitions to localised file
-- spotting addons and offering links to download updated versions
+- PRO - moving customised files to proper template locations if in shop folder structure
+- PRO - when language files are updated and custom files exist, automatically add new definitions to localised file
+- PRO - spotting addons and offering links to download updated versions

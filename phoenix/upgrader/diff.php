@@ -19,11 +19,15 @@
     $corepath = $_POST['corepath'] ?? '';
     $corepathtest = pathinfo( $corepath );
 
-    if ( empty( $filename ) || ! preg_match( '/^[a-zA-Z0-9_\-\/]+$/', $filepath['dirname'] ) || ! preg_match( '/^[a-zA-Z0-9_\-\.]+$/', $filepath['basename'] ) ) {
-      die( 'Invalid file name "' . htmlspecialchars( $filename ) . '"' );
+    //if ( empty( $filename ) || ! preg_match( '/^[a-zA-Z0-9_\-\/]+$/', $filepath['dirname'] ) || ! preg_match( '/^[a-zA-Z0-9_\-\.]+$/', $filepath['basename'] ) ) {
+    if ( empty( $filename ) || ! preg_match( '/^(?!.*\/\.\.(?:\/.*|$))[a-zA-Z0-9_\-\.\/]+$/', $filename ) ) {
+      error_log( 'Invalid file name "' . $filename . '"' );
+      die( 'oldCode = `Invalid file name "' . htmlspecialchars( $filename ) . '"`' );
     }
-    if ( empty( $corepath ) || ! preg_match( '/^[a-zA-Z0-9_\-\/]+$/', $corepathtest['dirname'] ) || ! preg_match( '/^[a-zA-Z0-9_\-\.]+$/', $corepathtest['basename'] ) ) {
-      die( 'Invalid core path "' . htmlspecialchars( $corepath ) . '"' );
+    //if ( empty( $corepath ) || ! preg_match( '/^[a-zA-Z0-9_\-\/]+$/', $corepathtest['dirname'] ) || ! preg_match( '/^[a-zA-Z0-9_\-\.]+$/', $corepathtest['basename'] ) ) {
+    if ( empty( $corepath ) || ! preg_match( '/^(?!.*\/\.\.(?:\/.*|$))[a-zA-Z0-9_\-\.\/]+$/', $corepath ) ) {
+      error_log( 'Invalid core path "' . $corepath . '"' );
+      die( 'oldCode = `Invalid core path "' . htmlspecialchars( $corepath ) . '"`' );
     }
 
     if ( ! empty( $config['cep_files'] ) && ! empty( $config['cep_files']['root'] ) && file_exists( $config['cep_files']['root'] . DIRECTORY_SEPARATOR . 'includes' . DIRECTORY_SEPARATOR . 'configure.php' ) ) {

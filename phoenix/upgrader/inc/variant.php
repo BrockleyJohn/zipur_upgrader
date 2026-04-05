@@ -1,0 +1,2 @@
+<?php
+$variant = 'FREE';

@@ -125,6 +125,11 @@
         if ( ! empty( $id ) ) {
             $extrahtml .= 'id="' . $id . '"';
         }
+        if ( ! empty( $params ) ) {
+            foreach ( $params as $key => $val ) {
+                $extrahtml .= ' data-' . $key . '="' . $val . '"';
+            }
+        }
 
         if ( $link == 'submit' ) {
             $buttoncode .= '<button class="p-1 pr-4 mr-3 btn btn-' . $size . ' btn-' . $class . '" ' . $extrahtml . '>';
@@ -135,11 +140,6 @@
         } else {
             $buttoncode .= '<a ' . $extrahtml . ' class="m-2 mr-4 pr-4 pl-2 btn btn-' . $size . ' btn-' . $class;
             $buttoncode .= '" href="' . $link . '"';
-            if ( ! empty( $params ) ) {
-                foreach ( $params as $key => $val ) {
-                    $buttoncode .= ' data-' . $key . '="' . $val . '"';
-                }
-            }
             $buttoncode .= '>';
             if ( ! empty( $icon ) ) {
                 $buttoncode .= '<i class="pr-2 pl-2 mr-1 fas ' . $icon . '"></i> ';
@@ -311,7 +311,7 @@
                 $jslines .= '$("#' . $id . '").datepicker({changeMonth: true, changeYear: true, showButtonPanel: true, dateFormat: "' . ZIPUR_PRODUCT_MANAGER_DATE_FORMAT3 . '"});' . PHP_EOL;
 
             }
-        } else if ( $type == 'text' || $type == 'password' || $type = 'checkbox' ) {
+        } else if ( $type == 'text' || $type == 'password' || $type == 'checkbox' ) {
 
             if ( ! empty( $passwordtoggle ) ) {
                 $fieldreturn .= '<div class="input-group show_hide_password">';
@@ -348,7 +348,7 @@
             $fieldreturn .= '<input type="file" name="' . $name . '" id="' . $id . '" value="' . $value . '" class="' . $class . '" style=""/>';
         } else if ( $type == 'textarea' ) {
 
-            $fieldreturn .= '<textarea name="' . $name . '" id="' . $id . '" rows="8" cols="80" class="' . $class . '" style="width: 80%;">';
+            $fieldreturn .= '<textarea name="' . $name . '" id="' . $id . '" rows="8" class="' . $class . '">';
             $fieldreturn .= $value;
             $fieldreturn .= '</textarea>';
         }
@@ -413,7 +413,8 @@
 
         global $config, $inc_directory;
 
-        file_put_contents( $inc_directory . DIRECTORY_SEPARATOR . "config.php", '<?php $config = ' . var_export( $config, true ) . ';' );
+        // file_put_contents( $inc_directory . DIRECTORY_SEPARATOR . "config.php", '<?php $config = ' . var_export( $config, true ) . ';' );
+        file_put_contents( $inc_directory . DIRECTORY_SEPARATOR . "config.json", json_encode( $config, JSON_PRETTY_PRINT ) );
 
         zipAlert( TEXT_SAVED, 'success' );
     }
@@ -433,7 +434,9 @@
         $checkendloc   = strpos( $getcheckfile, "\n", $checkstartloc );
         $versiontext   = substr( $getcheckfile, $checkstartloc, $checkendloc - $checkstartloc + 2 );
 
-        return preg_replace( '/[^0-9.]/', '', $versiontext );
+        @include( $inc_directory . DIRECTORY_SEPARATOR . 'variant.php' );
+
+        return sprintf('Addon Version: %s (%s)', preg_replace( '/[^0-9.]/', '', $versiontext ), $variant ?? 'FREE' );
     }
 
     /** Create a nested array from a directory root
@@ -679,7 +682,7 @@
      */
     function showUpgrade( &$upgrade, &$config, $process = false ) {
 
-        global $next_version, $admin_folder, $db, $output_buffer;
+        global $inc_directory, $next_version, $admin_folder, $db, $output_buffer;
 
         $ds = DIRECTORY_SEPARATOR;
 
@@ -796,6 +799,9 @@
 
             if ( ! empty( $upgrade['upgrade_files'] ) ) {
 
+                $worklist = file_exists( $inc_directory . '/worklist.json' ) ? json_decode( file_get_contents( $inc_directory . '/worklist.json' ), true ) : [];
+
+                $b = 0;
                 foreach ( $upgrade['upgrade_files'] as $upgrade_file ) {
 
                     $upgrade_file_short = str_replace( 'inc' . $ds . 'versions' . $ds . $next_version . $ds . 'files', '', $upgrade_file );
@@ -810,20 +816,56 @@
 
                         $tag = '<div class="alert alert-success" role="alert" style="display: inline-block; padding: 2px 1rem; width: auto; margin: 0px 1rem;">' . TEXT_SAFE . '</div>';
 
+                        $file_conflict = false;
+
                         foreach ( $config['core_changed_files'] as $key => $file ) {
                             if ( "{$file}" == "{$upgrade_file_short}" ) {
                                 $tag                 = '<div class="alert alert-danger" role="alert" style="display: inline-block; padding: 2px 1rem; width: auto; margin: 0px 1rem;">' . TEXT_NOT_SAFE . '</div>';
                                 $upgrade['conflict'] = true;
+                                $file_conflict = true;
+                                break;
                             }
                         }
 
-                        echo '<li class="list-group-item align-middle" style="padding: 2px 8px;"><i class="fas fa-file-alt"></i> ' . $tag . ' ' . $upgrade_file_short . '</li>';
+                        $worklist_item = '';
+                        $params = [ 'file' => $upgrade_file_short, 'index' => $b ];
+                        $workid = 'workitem_' . $b;
+                        
+                        if (true == $file_conflict && isset($worklist["{$upgrade_file_short}"])) {
+
+                            $work_entry = $worklist["{$upgrade_file_short}"];
+                            if ( $work_entry['status'] == 'complete' ) {
+                                $worklist_item = zipButton( TEXT_WORK_ITEM, TEXT_WORKLIST_DONE_COLOUR . ' worklink', '#', 'fa-' . TEXT_WORKLIST_DONE_ICON, 'sm', $workid, $params );
+                            } else {
+                                $worklist_item = zipButton( TEXT_WORK_ITEM, TEXT_WORKLIST_TO_DO_COLOUR . ' worklink', '#', 'fa-' . TEXT_WORKLIST_TO_DO_ICON, 'sm', $workid, $params );
+                            }
+
+                        } elseif (true == $file_conflict) {
+
+                            $worklist_item = zipButton( TEXT_WORK_ITEM, TEXT_WORKLIST_NEW_COLOUR . ' worklink', '#', 'fa-' . TEXT_WORKLIST_NEW_ICON, 'sm', $workid, $params );
+                        }
+
+                        echo '<li class="list-group-item align-middle justify-content-between d-flex" style="padding: 2px 8px;"><span><i class="fas fa-file-alt"></i> ' . $tag . ' ' . $upgrade_file_short . '</span>' . $worklist_item . '</li>';
 
                     } else {
 
+                        $extra_label = '';
 
                         foreach ( $config['core_changed_files'] as $key => $file ) {
                             if ( "{$file}" == "{$upgrade_file_short}" ) {
+                                //take a copy of changed file as promised
+                                if (! is_dir($inc_directory . $ds . 'change_backups' . $ds . $next_version ) ) {
+                                    mkdir($inc_directory . $ds . 'change_backups' . $ds . $next_version, 0755, true);
+                                }
+                                $from = $config['cep_files']['root'] . $upgrade_file_short;
+                                $to = $inc_directory . $ds . 'change_backups' . $ds . $next_version . $upgrade_file_short;
+                                $target = pathinfo( $to );
+                                if ( ! file_exists( $target['dirname'] ) ) {
+                                    mkdir( $target['dirname'], 0755, true );
+                                }
+                                error_log( "Backing up changed file before overwrite: from {$from} to {$to}" );
+                                copy($from, $to);
+                                $extra_label .= '<br/><small class="text-danger">' . TEXT_BACKED_UP . ' : ' . $upgrade_file_short . '</small>';
                                 //remove from future warnings as file is now replaced by core of this version
                                 unset($config['core_changed_files'][$key]);
                             }
@@ -833,10 +875,9 @@
                         $to_file   = $config['cep_files']['root'] . '' . $upgrade_file_short;
 
                         $target      = pathinfo( $to_file );
-                        $extra_label = '';
 
                         if ( ! file_exists( $target['dirname'] ) ) {
-                            $extra_label = '<br/><small>' . TEXT_CREATE_DIR . ' : ' . $target['dirname'] . '</small>';
+                            $extra_label .= '<br/><small>' . TEXT_CREATE_DIR . ' : ' . $target['dirname'] . '</small>';
                             mkdir( $target['dirname'], 0755, true );
                         }
 
@@ -869,6 +910,7 @@
 //                        ob_flush();
                     }
 
+                    $b++;
                 }
             } else {
                 echo '<li class="list-group-item align-middle" style="padding: 2px 8px;"><i class="fas fa-file-alt"></i> ' . TEXT_NO_FILE_CHANGES . '</li>';
@@ -994,7 +1036,7 @@
             }
             echo '</ul>';
 
-
+            worklistPopup();
 
             if ( ! empty( $output_buffer ) ) {
 //                flush();
@@ -1006,6 +1048,132 @@
             zipAlert( TEXT_UPGRADE_BROKEN );
 
         }
+    }
+
+    function worklistPopup() {
+            ?>
+<div class="modal" tabindex="-1" id="entryModal">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="entryModalTitle"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" data-dismiss="modal" aria-label="<?= TEXT_CLOSE ?>"> X </button>
+      </div>
+      <div class="modal-body" id="modalBody">
+        <div class="text-center mt-3">
+          <form id="worklistForm" style="display: inline-block; width:100%;">
+            <span class=""><?= TEXT_STEP_08_DIFFS_WORKLIST_ENTRY ?> <i id="worklistEntryStatus" class=""></i></span>
+            <?= zipField( 'textarea', 'worklist_entry', '', [], 'form-control', 'worklist_entry' ) ?>
+            <div id="worklistButtons" class="mt-2">
+            </div>
+          </form>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-dismiss="modal"><?= TEXT_CLOSE ?></button>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+    let entryModal;
+    
+    // assign modal once bootstrap is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+      entryModal = new bootstrap.Modal(document.getElementById('entryModal'));
+    });
+
+    document.querySelectorAll('.worklink').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const filename = this.getAttribute('data-file');
+            const index = this.getAttribute('data-index');
+
+            document.getElementById('entryModalTitle').textContent = filename;
+
+            fetch(`worklist.php`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `action=load&file=${encodeURIComponent(filename)}&index=${encodeURIComponent(index)}`,
+            })
+                .then(response => response.json())
+                .then(data => {
+                    const worklistEntry = data.entry || '';
+                    document.getElementById('worklist_entry').value = worklistEntry;
+                    const buttonsDiv = document.getElementById('worklistButtons');
+                    buttonsDiv.innerHTML = data.buttons;
+                    if (data.entrystatus) {
+                        const statusBadge = document.getElementById('worklistEntryStatus');
+                        if (data.entrystatus === 'complete') {
+                            statusBadge.className = '<?= TEXT_WORKLIST_DONE ?>';
+                        } else if (data.entrystatus === 'todo') {
+                            statusBadge.className = '<?= TEXT_WORKLIST_TO_DO ?>';
+                        } else {
+                            statusBadge.className = '';
+                        }
+                    }
+                    entryModal.show();
+                })
+                .catch(error => {
+                    console.error('Error loading worklist entry:', error);
+                    document.getElementById('worklist_entry').value = '';
+                    document.getElementById('worklistButtons').innerHTML = '';
+                });
+        });
+    });
+
+    // bubbling click handler on form for worklist buttons (add/edit/remove)
+    const worklistForm = document.getElementById('worklistForm');
+    worklistForm.addEventListener('click', function(e) {
+      if (e.target && e.target.matches('.listentry')) {
+          const action = e.target.getAttribute('data-action');
+          const filename = e.target.getAttribute('data-file');
+          const index = e.target.getAttribute('data-index');
+          // handle the action (add/edit/remove) for the worklist entry
+          fetch(`worklist.php`, {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/x-www-form-urlencoded',
+              },
+              body: `action=${encodeURIComponent(action)}&file=${encodeURIComponent(filename)}&index=${encodeURIComponent(index)}&worklist_entry=${encodeURIComponent(document.getElementById('worklist_entry').value)}`,
+          })                
+              .then(response => response.json())
+              .then(data => {
+                // add some positive feedback
+                if (data.success) {
+                    //alert('Worklist updated successfully');
+                    entryModal.hide();
+                    if (data.entrystatus) {
+                      const statusBadge = document.getElementById(`workitem_${index}`);
+                      if (data.entrystatus === 'complete') {
+                          statusBadge.className = '<?= TEXT_WORKLIST_DONE ?>';
+                      } else if (data.entrystatus === 'todo') {
+                          statusBadge.className = '<?= TEXT_WORKLIST_TO_DO ?>';
+                      } else {
+                          statusBadge.className = '';
+                      }
+                    }
+                } else if (data.error) {
+                    alert('Error: ' + data.error);
+                }
+              })
+              .catch(error => {
+                  console.error('Error updating worklist entry:', error);
+                  // add some error feedback
+                  alert('Error updating worklist entry: ' + error);
+              });
+      }
+
+    });
+    worklistForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+    });
+
+</script>
+            <?php
+
     }
 
     /**
@@ -1195,7 +1363,7 @@
     function callCartmart( $version, $action ) {
 
         $url = 'https://cartmart.uk/api/coreupdates/' . $version;
-        if (! empty($action)) $url .= '?' . http_build_query($query);
+        if (! empty($action)) $url .= '?' . http_build_query($action);
         $headers[] = 'Content-Type: application/json';
         $headers[] = 'Accept: application/json';
         $headers[] = 'X-Cartmart-Upgrades-Site: ' .  HTTP_SERVER . DIR_WS_CATALOG;

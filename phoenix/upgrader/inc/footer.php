@@ -33,8 +33,7 @@
 ?>
 <footer class="col mt-3 d-print-none">
     <div class="card bg-light p-0 pt-3 mb-3 card-body text-center">
-        <p>&copy; Intricate Networks Inc. <?php echo date( "Y" ); ?> - <a href="https://phoenixaddons.com/"
-                                                                          target="_blank">PhoenixAddons.com</a>
+        <p>&copy; Intricate Networks Inc. and SE Websites <?php echo date( "Y" ); ?> - <a href="https://cartmart.uk/" target="_blank">More addons at Cartmart.uk</a>
         </p>
     </div>
 </footer>

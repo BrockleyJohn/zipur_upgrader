@@ -80,7 +80,7 @@
 //                ob_end_flush();
         }
 
-        zipConfigFileSet();
+        //zipConfigFileSet();
         $zipFileVersion = zipGetFileVersion( basename( __FILE__ ) );
 
         require $inc_directory . '/config.php';
@@ -147,7 +147,7 @@
                     } */
                     if (empty($next_version)) {
                         list($next_version, $available_updates) = cartmartCheckVersion($cep_version);
-                        error_log('Cartmart check result: next_version=' . $next_version . ' available_updates=' . print_r($available_updates, true));
+                        //error_log('Cartmart check result: next_version=' . $next_version . ' available_updates=' . print_r($available_updates, true));
                         foreach ($available_updates as $update) {
                             if (! is_dir( __DIR__ . '/versions/' . $update['version'] ) ) {
                                 mkdir( __DIR__ . '/versions/' . $update['version'], 0755 );
@@ -221,8 +221,8 @@
                                    target="_blank">YouTube Channel</a> for Instructions on this tool and more!
             </div>
             <div class="col" style="text-align: right; padding: 0px 40px; margin-bottom: 10px;">
-                This tool created by @zipurman (<a href="https://PhoenixAddons.com" target="_blank">PhoenixAddons.com</a>)
-                Now maintained by @BrockleyJohn (<a href="https://cartmart.uk" target="_blank">cartmart.uk</a>)
+                Created by @zipurman (<a href="https://PhoenixAddons.com" target="_blank">PhoenixAddons.com</a>)
+                Now maintained by @BrockleyJohn (<a href="https://cartmart.uk" target="_blank">Cartmart.uk</a>)
             </div>
         </div>
         <div class="bg-dark text-light p-4 m-0 mw-100 rounded">
@@ -241,7 +241,8 @@
                         ?> </h4>
                 </div>
                 <div class="col-sm text-center">
-                    <small><?php echo $zipFileVersion; ?></small>
+                    <small><?php echo $zipFileVersion; ?></small><br>
+                <?php @include('inc/support.php'); ?>
                 </div>
             </div>
         </div>
@@ -254,6 +255,13 @@
                 ?>
                 <div class="navbar-light bg-light text-right">
                     <?php
+                        $worklist = file_exists( $inc_directory . '/worklist.json' ) ? json_decode( file_get_contents( $inc_directory . '/worklist.json' ), true ) : [];
+
+                        if (! empty( $worklist )  ) {
+                            echo zipButton( TEXT_BUTTON_VIEW_WORKLIST, 'warning', 'view_worklist.php', 'fa-tasks', 'sm', 'worklist_button' );
+                        }
+
+                        /** @var int $laststep */
                         /** @var int $laststep */
                         echo zipButton( TEXT_BUTTON_LOGOUT, 'secondary', 'index.php?logout=1', 'fa-sign-out-alt', 'sm' );
                     ?>

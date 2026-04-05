@@ -51,7 +51,10 @@
                     if ( $upgrade['installed'] ) {
 
                         $save_changes        = 1;
-                        $config['limitstep'] = 9;
+                        $config['limitstep'] = 6; // go back to downloading core files
+                        unset( $config['core_changed_files'] );
+                        unset( $config['core_added_files'] );
+                        unset( $config['core_downloaded'] );
                         unset( $config['next_version'] );
 
                         $catalog_path = defined( 'DIR_WS_CATALOG' ) ? DIR_WS_CATALOG : DIR_WS_HTTP_CATALOG;

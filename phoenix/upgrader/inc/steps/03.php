@@ -117,12 +117,19 @@
 
                         zipDashListItem( TEXT_STEP_03_CONFIRM_SERVER . ' ' . $teststatus, 5, 6, $limitstep );
 
+                        $downloadtext = '';
+                        if ( $config['limitstep'] >= 7 && (!empty($config['core_downloaded']))) {
+                            $downloadtext = '<i class="fas fa-check text-success"></i>';
+                        }
+
+                        zipDashListItem( sprintf(TEXT_STEP_03_DOWNLOAD_CORE, $cep_version) . ' ' . $downloadtext, 6, 7, $limitstep );
+
                         $upgradetext = '';
                         if ( $config['limitstep'] >= 8 && (!empty($config['core_changed_files']) || !empty($config['core_added_files']))) {
                             $upgradetext = '<i class="fas fa-check text-success"></i>';
                         }
 
-                        zipDashListItem( TEXT_STEP_03_REVIEW_CORE . ' ' . $upgradetext, 6, 7, $limitstep );
+                        zipDashListItem( sprintf(TEXT_STEP_03_REVIEW_CORE, $cep_version) . ' ' . $upgradetext, 7, 8, $limitstep );
 
                         $tablescounttext = '';
                         if ( $config['limitstep'] >= 9) {

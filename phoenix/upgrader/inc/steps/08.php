@@ -35,91 +35,17 @@
 
                 <?php
 
-                    $okset = 1;
+                        $versionpath = 'CE-Phoenix';
 
-                    zipDeleteDirectory( 'inc/clean_core/');
-
-                    //check core files
-                    if ( ! file_exists( 'inc/clean_core/' . $cep_version ) ) {
-
-                        if ( ! file_exists( 'inc/clean_core' ) ) {
-                            if ( ! mkdir( 'inc/clean_core', 0700 ) ) {
-                                echo '<span class="text-danger">' . TEXT_DIRECTORY_CREATE_ERROR . '</span>';
-                                $okset = 0;
+                        // lets get the actual folder name that was extracted (when using github api the folder name is not consistent so we need to find it)
+                        $files = scandir('inc/clean_core/');
+                        foreach ($files as $file) {
+                            if (is_dir('inc/clean_core/' . $file) && strpos($file, $versionpath) === 0) {
+                                $extracted_folder = 'inc/clean_core/' . $file;
+                                break;
                             }
                         }
-
-                        $extracted_folder = 'inc/clean_core/';
-
-                        if ( ! empty( $okset ) ) {
-                            $ziparch = class_exists('ZipArchive');
-
-                            if ( version_compare( '1.0.8.0', trim( $cep_version ) ) <= 0 /*|| version_compare( '1.1.0.0', trim( $cep_version ) ) >= 0*/ ) {
-                                //$newurl      = 'https://codeload.github.com/CE-PhoenixCart/PhoenixCart/zip/' . trim( $cep_version );
-                                $newurl      = 'https://api.github.com/repos/CE-PhoenixCart/PhoenixCart/zipball/v' . trim( $cep_version );
-                                $versionpath = 'CE-PhoenixCart-PhoenixCart-';
-
-                            } else {
-                                $newurl      = 'https://codeload.github.com/gburton/CE-Phoenix/zip/' . trim( $cep_version );
-                                $versionpath = 'CE-Phoenix-';
-
-                            }
-
-                            $zipext = $ziparch ? '.zip' : '.tar.gz';
-                            $newpath = 'inc/clean_core/' . trim( $cep_version ) . $zipext;
-                            $fp      = fopen( $newpath, 'w+' );
-                            $ch      = curl_init();
-                            curl_setopt( $ch, CURLOPT_URL, $newurl );
-                            curl_setopt( $ch, CURLOPT_RETURNTRANSFER, false );
-                            curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, false );
-                            curl_setopt( $ch, CURLOPT_FOLLOWLOCATION, true );
-                            curl_setopt( $ch, CURLOPT_CONNECTTIMEOUT, 10 );
-                            curl_setopt( $ch, CURLOPT_USERAGENT, 'PhoenixUpgrader/' . $zipFileVersion );
-                            curl_setopt( $ch, CURLOPT_FILE, $fp );
-                            curl_exec( $ch );
-                            $info = curl_getinfo($ch);
-                            curl_close( $ch );
-                            fclose( $fp );
-                            error_log('Download info: ' . print_r($info, true));
-
-                            if ( $info['http_code'] !== 200 && $info['http_code'] !== 302 || ! file_exists( $newpath ) ) {
-                                echo '<span class="text-danger">' . ZIPUR_CODE_COMPARE_DOWNLOAD_ERROR . ' (' . $versionpath . trim( $cep_version ) . $zipext . ')</span>';
-                                $okset = 0;
-                            } else {
-                                echo '<span class="text-success">' . ZIPUR_CODE_COMPARE_DOWNLOAD_SUCCESS . ' (' . $versionpath . trim( $cep_version ) . $zipext . ')</span>';
-                                if ($ziparch) {
-                                    $zip = new ZipArchive;
-                                    $res = $zip->open( $newpath );
-                                    if ( $res === true ) {
-                                        $zip->extractTo( 'inc/clean_core/' );
-                                        $zip->close();
-                                        echo '<br/><span class="text-success">' . ZIPUR_CODE_COMPARE_UNZIP_SUCCESS . '</span>';
-                                        unlink( $newpath );//deletes downloaded zip
-                                    } else {
-                                        echo '<br/><span class="text-danger">' . ZIPUR_CODE_COMPARE_UNZIP_FAILED . ' (' . $newpath . ')</span>';
-                                        $okset = 0;
-                                    }
-                                } else {
-                                    $gz_extract = new PharData( $newpath );
-                                    $gz_extract->decompress(); // creates files.tar
-                                    $tar_extract = new PharData( str_replace( '.gz', '', $newpath ) );
-                                    $tar_extract->extractTo( 'inc/clean_core/' );
-                                    unlink( str_replace( '.gz', '', $newpath ) );//deletes tar
-                                    unlink( $newpath );//deletes downloaded zip
-                                    echo '<br/><span class="text-success">' . ZIPUR_CODE_COMPARE_UNZIP_SUCCESS . '</span>';
-                                }
-
-                                // lets get the actual folder name that was extracted (when using github api the folder name is not consistent so we need to find it)
-                                $files = scandir('inc/clean_core/');
-                                foreach ($files as $file) {
-                                    if (is_dir('inc/clean_core/' . $file) && strpos($file, $versionpath) === 0) {
-                                        $extracted_folder = 'inc/clean_core/' . $file;
-                                        break;
-                                    }
-                                }
-                                error_log('Extracted folder: ' . $extracted_folder);
-                            }
-                        }
+                        //error_log('Extracted folder: ' . $extracted_folder);
 
                         $installedfiles    = [];
                         $cleancorefiles    = [];
@@ -144,7 +70,7 @@
 
                         //setup array for existing install
                         zipGetCoreArray( $config['cep_files']['root'], $exclude1 );
-                        error_log('installed files: ' . print_r($installedfiles, true));
+                        //error_log('installed files: ' . print_r($installedfiles, true));
 
                         $exclude2 = [
                             'images',
@@ -164,7 +90,7 @@
                         //zipGetCoreArray( 'inc/clean_core/' . $versionpath . trim( $cep_version ), $exclude2, 1 );
                         zipGetCoreArray( $extracted_folder, $exclude2, 1 );
 
-                        error_log('clean core files: ' . print_r($cleancorefiles, true));
+                        //error_log('clean core files: ' . print_r($cleancorefiles, true));
 
                         foreach ( $installedfiles as $installedfilekey => $installedfile ) {
                             if ( empty( $cleancorefiles[ $installedfilekey ] ) ) {
@@ -174,13 +100,30 @@
                             }
                         }
                         zipAlert( TEXT_STEP_08_WARNING, 'success' );
+                        $db = mysqli_connect( DB_SERVER, DB_SERVER_USERNAME, DB_SERVER_PASSWORD, DB_DATABASE, MYSQL_PORT );
+                        $template_q = mysqli_query( $db, "SELECT `configuration_value` FROM `configuration` WHERE `configuration_key` = 'TEMPLATE_SELECTION'" );
+                        $template = mysqli_fetch_assoc( $template_q );
+                        zipAlert( sprintf(TEXT_STEP_08_CURRENT_TEMPLATE, $template['configuration_value']), 'info' );
 
                         echo '<ul class="list-group">';
+
+                        $worklist = file_exists( $inc_directory . '/worklist.json' ) ? json_decode( file_get_contents( $inc_directory . '/worklist.json' ), true ) : [];
 
                         $b = 0;
                         foreach ( $zip_altered_files as $zip_added_file ) {
 
-                            echo '<li class="list-group-item align-items-center justify-content-between d-flex py-1">' . $zip_added_file . ' ' . zipButton(TEXT_BUTTON_DIFFS, 'secondary btn-diff', '#', 'fa-compress-alt', 'md', 'diffs' . $b, ['filename' => $zip_added_file, 'corepath' => $extracted_folder]) . '</li>';
+                          switch (true) {
+                            case ! isset($worklist["{$zip_added_file}"]):
+                              $worklist_style = TEXT_WORKLIST_NEW;
+                              break;
+                            case ($worklist[$zip_added_file]['status'] ?? '') === 'complete':
+                              $worklist_style = TEXT_WORKLIST_DONE;
+                              break;
+                            default:
+                              $worklist_style = TEXT_WORKLIST_TO_DO;
+                          }
+
+                            echo '<li class="list-group-item align-items-center justify-content-between d-flex py-1">' . $zip_added_file . ' <span>' . zipButton(TEXT_BUTTON_DIFFS, 'secondary btn-diff', '#', 'fa-compress-alt', 'md', 'diffs' . $b, ['filename' => $zip_added_file, 'corepath' => $extracted_folder, 'index' => $b]) . ' <i id="worklist_' . $b . '" class="' . $worklist_style . '"></i></span></li>';
                             $b++;
 
                         }
@@ -189,17 +132,11 @@
                         }
                         echo '</ul>';
 
+                        $save_changes = 1;
                         $config['core_changed_files'] = $zip_altered_files;
                         $config['core_added_files'] = $zip_added_files;
                         $config['next_version'] = $next_version;
-                        $save_changes        = 1;
-
-                    }
-
-                    if ( $okset == 1 ) {
-                        $save_changes        = 1;
                         $config['limitstep'] = ( $config['limitstep'] < 8 ) ? 8 : $config['limitstep'];
-                    }
 
                 ?>
 
@@ -227,6 +164,14 @@ let oldCode = '', newCode = '';
         </div>
         <div class="diff-container">
             <div class="code-block"><pre><code id="oldOutput" class="php"></code></pre></div>
+        </div>
+        <div class="text-center mt-3">
+          <form id="worklistForm" style="display: inline-block; width:100%;">
+            <span class=""><?= TEXT_STEP_08_DIFFS_WORKLIST_ENTRY ?> <i id="worklistEntryStatus" class=""></i></span>
+            <?= zipField( 'textarea', 'worklist_entry', '', [], 'form-control', 'worklist_entry' ) ?>
+            <div id="worklistButtons" class="mt-2">
+            </div>
+          </form>
         </div>
       </div>
       <div class="modal-footer">
@@ -427,12 +372,50 @@ var mergeHTMLPlugin = (function () {
     // add plugin to highlight.js
     hljs.addPlugin(mergeHTMLPlugin);
 
+    let diffModal;
+    
+    // assign modal once bootstrap is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+      diffModal = new bootstrap.Modal(document.getElementById('diffModal'));
+    });
+
     document.querySelectorAll('.btn-diff').forEach(button => {
         button.addEventListener('click', function(e) {
             e.preventDefault();
             const filename = this.getAttribute('data-filename');
             const corepath = this.getAttribute('data-corepath');
-            //fetch(`diff.php?file=${encodeURIComponent(filename)}`)
+            const index = this.getAttribute('data-index');
+            // check for existing worklist entry for this file
+            fetch(`worklist.php`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `action=load&file=${encodeURIComponent(filename)}&index=${encodeURIComponent(index)}`,
+            })
+                .then(response => response.json())
+                .then(data => {
+                    const worklistEntry = data.entry || '';
+                    document.getElementById('worklist_entry').value = worklistEntry;
+                    const buttonsDiv = document.getElementById('worklistButtons');
+                    buttonsDiv.innerHTML = data.buttons;
+                    if (data.entrystatus) {
+                        const statusBadge = document.getElementById('worklistEntryStatus');
+                        if (data.entrystatus === 'complete') {
+                            statusBadge.className = '<?= TEXT_WORKLIST_DONE ?>';
+                        } else if (data.entrystatus === 'todo') {
+                            statusBadge.className = '<?= TEXT_WORKLIST_TO_DO ?>';
+                        } else {
+                            statusBadge.className = '';
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading worklist entry:', error);
+                    document.getElementById('worklist_entry').value = '';
+                    document.getElementById('worklistButtons').innerHTML = '';
+                });
+            // generate diffs
             fetch(`diff.php`, {
                 method: 'POST',
                 headers: {
@@ -446,15 +429,62 @@ var mergeHTMLPlugin = (function () {
                     let script = document.createElement('script');
                     script.textContent = diffHtml;
                     document.getElementById('modalBody').appendChild(script);
-                    new bootstrap.Modal(document.getElementById('diffModal')).show();
+                    diffModal.show();
                     createDiff();
                 })
                 .catch(error => {
                     document.getElementById('diffModalTitle').textContent = 'Error';
                     document.getElementById('modalBody').textContent = 'Could not load diff: ' + error;
-                    new bootstrap.Modal(document.getElementById('diffModal')).show();
+                    diffModal.show();
                 });
         });
+    });
+
+    // bubbling click handler on form for worklist buttons (add/edit/remove)
+    const worklistForm = document.getElementById('worklistForm');
+    worklistForm.addEventListener('click', function(e) {
+      if (e.target && e.target.matches('.listentry')) {
+          const action = e.target.getAttribute('data-action');
+          const filename = e.target.getAttribute('data-file');
+          const index = e.target.getAttribute('data-index');
+          // handle the action (add/edit/remove) for the worklist entry
+          fetch(`worklist.php`, {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/x-www-form-urlencoded',
+              },
+              body: `action=${encodeURIComponent(action)}&file=${encodeURIComponent(filename)}&index=${encodeURIComponent(index)}&worklist_entry=${encodeURIComponent(document.getElementById('worklist_entry').value)}`,
+          })                
+              .then(response => response.json())
+              .then(data => {
+                // add some positive feedback
+                if (data.success) {
+                    //alert('Worklist updated successfully');
+                    diffModal.hide();
+                    if (data.entrystatus) {
+                      const statusBadge = document.getElementById(`worklist_${index}`);
+                      if (data.entrystatus === 'complete') {
+                          statusBadge.className = '<?= TEXT_WORKLIST_DONE ?>';
+                      } else if (data.entrystatus === 'todo') {
+                          statusBadge.className = '<?= TEXT_WORKLIST_TO_DO ?>';
+                      } else {
+                          statusBadge.className = '';
+                      }
+                    }
+                } else if (data.error) {
+                    alert('Error: ' + data.error);
+                }
+              })
+              .catch(error => {
+                  console.error('Error updating worklist entry:', error);
+                  // add some error feedback
+                  alert('Error updating worklist entry: ' + error);
+              });
+      }
+
+    });
+    worklistForm.addEventListener('submit', function(e) {
+        e.preventDefault();
     });
 
 function createDiff() {
@@ -473,39 +503,39 @@ function createDiff() {
 }
 
 function renderTable(tableId, diff) {
-    const table = document.getElementById(tableId);
-    table.innerHTML = '';
-    const lines = diff_prettyLines(diff);
+  const table = document.getElementById(tableId);
+  table.innerHTML = '';
+  const lines = diff_prettyLines(diff);
 
-    lines.forEach((line, index) => {
-        const tr = document.createElement('tr');
+  lines.forEach((line, index) => {
+      const tr = document.createElement('tr');
 
-        const tdNum = document.createElement('td');
-        tdNum.className = 'line-num';
-        tdNum.textContent = index + 1;
+      const tdNum = document.createElement('td');
+      tdNum.className = 'line-num';
+      tdNum.textContent = index + 1;
 
-        const tdCode = document.createElement('td');
-        tdCode.className = 'code';
-        tdCode.innerHTML = `<pre><code class="php">${line}</code></pre>`;
+      const tdCode = document.createElement('td');
+      tdCode.className = 'code';
+      tdCode.innerHTML = `<pre><code class="php">${line}</code></pre>`;
 
-        tr.appendChild(tdNum);
-        tr.appendChild(tdCode);
-        table.appendChild(tr);
-    });
+      tr.appendChild(tdNum);
+      tr.appendChild(tdCode);
+      table.appendChild(tr);
+  });
 }
 
 function diff_prettyLines(diff) {
-    const html = [];
-    diff.forEach(part => {
-        let text = part[1].replace(/</g, "&lt;").replace(/>/g, "&gt;");
-        if (part[0] === 1) { // Added
-            text = `<ins>${text}</ins>`;
-        } else if (part[0] === -1) { // Removed
-            text = `<del>${text}</del>`;
-        }
-        html.push(text);
-    });
-    return html.join('').split("\n");
+  const html = [];
+  diff.forEach(part => {
+      let text = part[1].replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      if (part[0] === 1) { // Added
+          text = `<ins>${text}</ins>`;
+      } else if (part[0] === -1) { // Removed
+          text = `<del>${text}</del>`;
+      }
+      html.push(text);
+  });
+  return html.join('').split("\n");
 }
 </script>
 

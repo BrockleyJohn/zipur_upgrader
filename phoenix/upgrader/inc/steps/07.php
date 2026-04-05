@@ -28,6 +28,95 @@
         $this_step_file = str_replace( '.php', '', basename( __FILE__ ) );
 
         if ( $require_step == $this_step_file || empty( $require_step ) ) {
+
+            if ('getcore' === ($_POST['action'] ?? '')) {
+
+                $okset = 1;
+
+                zipDeleteDirectory( 'inc/clean_core/');
+
+                //check core files
+                //if ( ! file_exists( 'inc/clean_core/' . $cep_version ) ) {
+
+                    if ( ! file_exists( 'inc/clean_core' ) ) {
+                        if ( ! mkdir( 'inc/clean_core', 0700 ) ) {
+                            echo '<span class="text-danger">' . TEXT_DIRECTORY_CREATE_ERROR . '</span>';
+                            $okset = 0;
+                        }
+                    }
+
+                    $extracted_folder = 'inc/clean_core/';
+
+                    if ( ! empty( $okset ) ) {
+                        $ziparch = class_exists('ZipArchive');
+
+                        if ( version_compare( '1.0.8.0', trim( $cep_version ) ) <= 0 /*|| version_compare( '1.1.0.0', trim( $cep_version ) ) >= 0*/ ) {
+                            //$newurl      = 'https://codeload.github.com/CE-PhoenixCart/PhoenixCart/zip/' . trim( $cep_version );
+                            $newurl      = 'https://api.github.com/repos/CE-PhoenixCart/PhoenixCart/zipball/v' . trim( $cep_version );
+                            $versionpath = 'CE-PhoenixCart-PhoenixCart-';
+
+                        } else {
+                            $newurl      = 'https://codeload.github.com/gburton/CE-Phoenix/zip/' . trim( $cep_version );
+                            $versionpath = 'CE-Phoenix-';
+
+                        }
+
+                        $zipext = $ziparch ? '.zip' : '.tar.gz';
+                        $newpath = 'inc/clean_core/' . trim( $cep_version ) . $zipext;
+                        $fp      = fopen( $newpath, 'w+' );
+                        $ch      = curl_init();
+                        curl_setopt( $ch, CURLOPT_URL, $newurl );
+                        curl_setopt( $ch, CURLOPT_RETURNTRANSFER, false );
+                        curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, false );
+                        curl_setopt( $ch, CURLOPT_FOLLOWLOCATION, true );
+                        curl_setopt( $ch, CURLOPT_CONNECTTIMEOUT, 10 );
+                        curl_setopt( $ch, CURLOPT_USERAGENT, 'PhoenixUpgrader/' . $zipFileVersion );
+                        curl_setopt( $ch, CURLOPT_FILE, $fp );
+                        curl_exec( $ch );
+                        $info = curl_getinfo($ch);
+                        curl_close( $ch );
+                        fclose( $fp );
+                        error_log('Download info: ' . print_r($info, true));
+
+                        if ( $info['http_code'] !== 200 && $info['http_code'] !== 302 || ! file_exists( $newpath ) ) {
+                            echo '<span class="text-danger">' . ZIPUR_CODE_COMPARE_DOWNLOAD_ERROR . ' (' . $versionpath . trim( $cep_version ) . $zipext . ')</span>';
+                            $okset = 0;
+                        } else {
+                            echo '<span class="text-success">' . ZIPUR_CODE_COMPARE_DOWNLOAD_SUCCESS . ' (' . $versionpath . trim( $cep_version ) . $zipext . ')</span>';
+                            if ($ziparch) {
+                                $zip = new ZipArchive;
+                                $res = $zip->open( $newpath );
+                                if ( $res === true ) {
+                                    $zip->extractTo( 'inc/clean_core/' );
+                                    $zip->close();
+                                    echo '<br/><span class="text-success">' . ZIPUR_CODE_COMPARE_UNZIP_SUCCESS . '</span>';
+                                    unlink( $newpath );//deletes downloaded zip
+                                } else {
+                                    echo '<br/><span class="text-danger">' . ZIPUR_CODE_COMPARE_UNZIP_FAILED . ' (' . $newpath . ')</span>';
+                                    $okset = 0;
+                                }
+                            } else {
+                                $gz_extract = new PharData( $newpath );
+                                $gz_extract->decompress(); // creates files.tar
+                                $tar_extract = new PharData( str_replace( '.gz', '', $newpath ) );
+                                $tar_extract->extractTo( 'inc/clean_core/' );
+                                unlink( str_replace( '.gz', '', $newpath ) );//deletes tar
+                                unlink( $newpath );//deletes downloaded zip
+                                echo '<br/><span class="text-success">' . ZIPUR_CODE_COMPARE_UNZIP_SUCCESS . '</span>';
+                            }
+
+                        }
+
+                        $save_changes        = 1;
+                        $config['core_downloaded'] = 1;
+                        $config['limitstep'] = 7; 
+
+                        echo '<br>' . zipButton( TEXT_BUTTON_NEXT, 'success', 'index.php?step=3', 'fa-chevron-right', 'sm' );
+                    }
+
+                //}
+
+            } else {
             ?>
 
             <div class="w-75 m-auto">
@@ -36,11 +125,16 @@
                     <?php
                         /** @var int $laststep */
                         echo zipButton( TEXT_BUTTON_BACK, 'secondary', 'index.php?step=3', 'fa-chevron-left', 'sm' );
-                        echo zipButton( TEXT_BUTTON_PROCEED, 'success', 'index.php?step=8', 'fa-chevron-right', 'sm' );
+                        echo '<form method="post" class="d-inline-block" id="getcoreform" action="index.php?step=7">';
+                        echo '<input type="hidden" name="action" value="getcore">';
+                        echo zipButton( TEXT_BUTTON_PROCEED, 'success', 'submit', 'fa-chevron-right', 'sm' );
                     ?>
+                    </form>
                 </div>
             </div>
 
             <?php
+
+            }
         }
     }

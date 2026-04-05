@@ -3,7 +3,7 @@
     if ( file_exists($version_dir . '/update.json') ) {
         try {
             $json = file_get_contents($version_dir . '/update.json');
-            error_log('Got json "' . $json . '" from ' . $version_dir . '/update.json');
+            // error_log('Got json "' . $json . '" from ' . $version_dir . '/update.json');
             $json = json_decode($json, true);
             if ( is_array($json) ) {
 
@@ -55,7 +55,7 @@
                     }
                 }
 
-                error_log('Update.json file found and processed successfully.');
+                // error_log('Update.json file found and processed successfully.');
 
                 if (file_exists($version_dir . '/update.sql')) {
                     $sql = file_get_contents($version_dir . '/update.sql');

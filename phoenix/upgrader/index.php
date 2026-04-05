@@ -33,7 +33,7 @@
 
         if ( ! empty( $require_step ) ) {
             include 'inc/steps/' . $require_step . '.php';
-        }
+        } 
 
         require 'inc/footer.php';
     } catch (Exception $e) {
