@@ -76,9 +76,9 @@
                         $info = curl_getinfo($ch);
                         curl_close( $ch );
                         fclose( $fp );
-                        error_log('Download info: ' . print_r($info, true));
 
                         if ( $info['http_code'] !== 200 && $info['http_code'] !== 302 || ! file_exists( $newpath ) ) {
+                            error_log('Core Download info: ' . print_r($info, true));
                             echo '<span class="text-danger">' . ZIPUR_CODE_COMPARE_DOWNLOAD_ERROR . ' (' . $versionpath . trim( $cep_version ) . $zipext . ')</span>';
                             $okset = 0;
                         } else {

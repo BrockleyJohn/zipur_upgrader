@@ -863,7 +863,7 @@
                                 if ( ! file_exists( $target['dirname'] ) ) {
                                     mkdir( $target['dirname'], 0755, true );
                                 }
-                                error_log( "Backing up changed file before overwrite: from {$from} to {$to}" );
+                                //error_log( "Backing up changed file before overwrite: from {$from} to {$to}" );
                                 copy($from, $to);
                                 $extra_label .= '<br/><small class="text-danger">' . TEXT_BACKED_UP . ' : ' . $upgrade_file_short . '</small>';
                                 //remove from future warnings as file is now replaced by core of this version
@@ -1344,10 +1344,10 @@
         $return = callCartmart( $version, '' );
         if ( $return['httpcode'] == 200 ) {
             $response = json_decode( $return['response'], true );
-            error_log('Cartmart response: ' . print_r($response, true));
             if ( ! empty( $response['next_version'] )  ) {
                 return [ $response['next_version'], $response['later'] ?? [] ];
             } else {
+                error_log('Cartmart response: ' . print_r($response, true));
                 throw new Exception( 'Invalid response from Cartmart: ' . $return['response'] );
             }
         } else {
@@ -1430,9 +1430,9 @@
         $info = curl_getinfo($ch);
         curl_close( $ch );
         fclose( $fp );
-        error_log('Download info: ' . print_r($info, true));
 
         if ( $info['http_code'] !== 200 && $info['http_code'] !== 302 || ! file_exists( $version_zip ) ) {
+            error_log('Update Download info: ' . print_r($info, true));
             echo '<span class="text-danger">' . sprintf(TEXT_VERSION_DOWNLOAD_FAILED, $version, $version_url, $version_zip) . '</span>';
             $okset = 0;
         } else {

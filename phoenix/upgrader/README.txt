@@ -1,11 +1,11 @@
 ---------------------------------------------------
 
-Zipur CE Phoenix Upgrade Utility
+Zipur CE Phoenix Upgrade Utility - Version 2
 
 ---------------------------------------------------
 
 Released under the GNU General Public License
-
+Copyright (c) 2026: John Ferguson - @BrockleyJohn - SE Websites
 Copyright (c) 2020: Preston Lord - @zipurman - Intricate Networks Inc.
 
   Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -20,8 +20,9 @@ Copyright (c) 2020: Preston Lord - @zipurman - Intricate Networks Inc.
 
 ---------------------------------------------------
 
-This utility will upgrade your CE Phoenix store. The versions are in the /versions file. You can get the most recent versions on phoenixcart.org/forum/addons/
-
+This utility will upgrade your CE Phoenix store. 
+The update data for each version is no longer included in the addon but downloaded automatically as required, so you don't need to upload a whole bunch in one go, or update the addon for each release.
+After a new version of CE Phoenix is released, keep an eye on the support forum for this addon for announcement of the availability of the corresponding update.
 
 Instructions:
 
@@ -32,12 +33,21 @@ Instructions:
     5. Login
     6. Link to the file structure of your store
     7. Test the connection
-    8. Review core changes. This will download a clean version of the version you are running currently. It will then compare that to your installed version and let you know which files have been altered from their original state. YOU SHOULD REVIEW ALL OF THOSE CHANGES if any as they may break custom mods you have done to your store. After proceeding, during the upgrade(s), files will be tagged if they are replacing modified files ... again, review your core changes to be sure you dont break your store.
+    8. Review core changes. This will download a clean version of the version you are running currently. It will then compare that to your installed version and let you know which files have been altered from their original state. 
+    - a diff viewer is provided to show you the changes from the core file
+    - a worklist is provided for you to store notes about the changes and any planned actions
+    - YOU SHOULD REVIEW ALL OF THOSE CHANGES if any as they may break custom mods you have done to your store. After proceeding, during the upgrade(s), files will be tagged if they are replacing modified files ... again, review your core changes to be sure you dont break your store. Think about whether changes can be made in advance or if you need to follow up quickly afterwards.
     9. Check for configuration duplicates and remove any found.
-    10. Start upgrading and read each upgrade carefully.
+    10. Review the update:
+    - the actions the update will take are displayed
+    - pay close attention to the files that will be replaced; you can access your worklist entries here
+    - if necessary you can return to the core compare step to redisplay differences and make better notes of any followup actions
+    11. Start upgrading and read the upgrade results carefully.
+    - copies are made of any updated files that had changes from core
+    12. After the upgrade is complete, the updater circles around to the next available update and you can plough straight on with comparing to core again. Your work list is kept.
 
     Happy Upgrading!!
 
-    Zipurman
+    BrockleyJohn
 
 

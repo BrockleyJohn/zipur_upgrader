@@ -45,8 +45,8 @@
       // echo 'add processing code for ' . htmlspecialchars( $filename ) . ' here';
       $core_filename = $filename = ltrim( $filename, '/\\' );
       $admin_path = ltrim( str_replace( $config['cep_files']['root'], '', $config['cep_files']['admin'] ), '/\\' );
-      error_log( 'Admin path: ' . $admin_path );
-      error_log( 'Filename: ' . $filename );
+      //error_log( 'Admin path: ' . $admin_path );
+      //error_log( 'Filename: ' . $filename );
       if (strpos( $filename, $admin_path ) === 0) {
         $core_filename = 'admin' . substr( $filename, strlen( $admin_path ) );
       }
@@ -55,8 +55,8 @@
       //$core_file = 'inc' . DIRECTORY_SEPARATOR . 'clean_core' . DIRECTORY_SEPARATOR . $zippath . $cep_version . DIRECTORY_SEPARATOR . $core_filename;
       $core_file = $corepath . DIRECTORY_SEPARATOR . $core_filename;
 
-      error_log( 'Site file: ' . $site_file );
-      error_log( 'Core file: ' . $core_file );
+      //error_log( 'Site file: ' . $site_file );
+      //error_log( 'Core file: ' . $core_file );
 
       $site_code = file_exists( $site_file ) ? file_get_contents( $site_file ) : "<?php\n// Site file not found '$site_file'\n";
       $core_code = file_exists( $core_file ) ? file_get_contents( $core_file ) : "<?php\n// Core file not found '$core_file'\n";
