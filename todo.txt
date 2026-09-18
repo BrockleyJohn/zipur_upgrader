@@ -1,7 +1,9 @@
 - look into encrypting the password
 - DONE - better code compare view
 - DONE - building a work list of files to check/deal with
+- auto install required new modules
 - deal with added files
 - PRO - moving customised files to proper template locations if in shop folder structure
+- PRO - flag when overridden files are updated
 - PRO - when language files are updated and custom files exist, automatically add new definitions to localised file
 - PRO - spotting addons and offering links to download updated versions

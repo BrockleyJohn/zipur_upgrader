@@ -130,7 +130,7 @@
                 /*error_log('cep_version ' . print_r($cep_version, true));
                 error_log('compare result ' . version_compare( "{$config['next_version']}", "{$cep_version}" )); */
 
-                if ( ! empty( $config['next_version'] ) && version_compare( "{$config['next_version']}", "{$cep_version}" ) > 0 ) {
+                if ( ! empty( $config['next_version'] ) && version_compare( "{$config['next_version']}", "{$cep_version}" ) > 0 && is_dir( __DIR__ . '/versions/' . $config['next_version'] )) {
                     $next_version = $config['next_version'];
                 } else {
                     /* foreach ( $versions as $ver_check ) {
@@ -145,7 +145,7 @@
 
                         }
                     } */
-                    if (empty($next_version)) {
+                    if ( empty($next_version) || ! is_dir( __DIR__ . '/versions/' . $next_version ) ) {
                         list($next_version, $available_updates) = cartmartCheckVersion($cep_version);
                         //error_log('Cartmart check result: next_version=' . $next_version . ' available_updates=' . print_r($available_updates, true));
                         foreach ($available_updates as $update) {

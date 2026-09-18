@@ -1,6 +1,13 @@
 ---------------------------------------------------
 
-Zipur CE Phoenix Upgrade Utility - Version 2
+Zipur CE Phoenix Upgrade Utility - Version 2.0.1
+
+---------------------------------------------------
+updating from 2.0.0
+There is only one file changed to upload:
+upgrader/inc/header.php
+
+This picks up the next release if it has been added since the upgrade utility was last run
 
 ---------------------------------------------------
 
