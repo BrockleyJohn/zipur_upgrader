@@ -39,6 +39,8 @@
                             'file' => $module,
                             'name' => $module_details['module_path'],
                             'key' => $module_details['key_prefix'],
+                            'module_set' => $module_details['module_set'],
+                            'force' => true
                         ];
                     }
                 }

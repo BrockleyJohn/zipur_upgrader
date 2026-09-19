@@ -1014,6 +1014,7 @@
 
             echo '<ul class="list-group mt-4 mb-4">';
             if ( ! empty( $upgrade['settings']['enable'] ) ) {
+                $installer = [];
                 foreach ( $upgrade['settings']['enable'] as $enable ) {
 
                     $skip_text = '';
@@ -1027,9 +1028,22 @@
 
                     $extra_class = ( $enable['force'] ) ? 'alert-danger' : 'alert-warning';
                     $extra_text = ( $enable['force'] ) ? '!!REQUIRED!! ' : '';
+                    if ( $enable['force'] ) {
+                        $installer["{$enable['module_set']}"][] = basename($enable['file'], '.php');
+                    }
 
                     echo '<li class="list-group-item align-middle alert ' . $extra_class . '" style="padding: 2px 8px;"><i class="fas fa-puzzle-piece"></i> ' . $extra_text . TEXT_ENABLE_MODULE . ' : ' . $enable['name'] . $skip_text . '</li>';
 
+                }
+                if ( ! empty($installer) ) {
+                    if (! defined('DIR_WS_ADMIN')) {
+
+                        include($GLOBALS['config']['cep_files']['admin'] . DIRECTORY_SEPARATOR . 'includes' . DIRECTORY_SEPARATOR . 'configure.php');   
+                    }
+                    foreach ($installer as $module_set => $install_modules) {
+                        $installer_modules = implode(',', $install_modules);
+                        echo '<li class="list-group-item align-middle alert alert-danger" style="padding: 2px 8px;"><i class="fas fa-exclamation-triangle"></i> <form action="' . HTTP_SERVER . DIR_WS_ADMIN . 'modules.php?set=' . $module_set . '" method="post"><input type="hidden" name="action" value="upgrader_install" /><input type="hidden" name="installer_modules" value="' . $installer_modules . '" />' . zipButton(sprintf(TEXT_INSTALLER_REQUIRED, $module_set), 'success', 'submit', 'fa-puzzle-piece') . '</form></li>';
+                    }
                 }
             } else {
                 echo '<li class="list-group-item align-middle" style="padding: 2px 8px;"><i class="fas fa-puzzle-piece"></i> ' . TEXT_NO_ENABLE_CHANGES . '</li>';
@@ -1330,8 +1344,28 @@
         }
         $module_path = str_replace( ['includes/', basename($catalogfile) ], '', $catalogfile );
         $module_path = 'admin &gt;' . str_replace( '/', ' &gt; ', $module_path ) . $class_name;
+
+        $module_set = '';
+        foreach ([
+            'action_recorder' => 'action_recorder',
+            'content' => 'content',
+            'customer_data' => 'customer_data',
+            'header_tags' => 'header_tags',
+            'navbar' => 'navbar',
+            'notifications' => 'notifications',
+            'order_total' => 'order_total',
+            'outgoing' => 'outgoing',
+            'payment' => 'payment',
+            'pi' => 'layout',
+            'shipping' => 'shipping'
+        ] as $folder => $set) {
+            if ( strpos( $module_path, $folder ) !== false ) {
+                $module_set = $set;
+                break;
+            }
+        }
         
-        return [ 'module_path' => $module_path, 'class_name' => $class_name, 'key_prefix' => $key_prefix ];
+        return [ 'module_path' => $module_path, 'class_name' => $class_name, 'key_prefix' => $key_prefix, 'module_set' => $module_set ];
     }
 
     /**

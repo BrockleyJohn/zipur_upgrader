@@ -139,6 +139,8 @@
     const TEXT_STEP_08_DIFFS_WORKLIST_COMPLETE = 'MARK COMPLETE / IGNORE';
     const TEXT_STEP_11_DESCRIPTION = 'Below is the output from your upgrade to ';
 
+    const TEXT_INSTALLER_REQUIRED = 'Auto install all required %s modules';
+
     const TEXT_WORKLIST_DONE_COLOUR = 'success';
     const TEXT_WORKLIST_NEW_COLOUR = 'danger';
     const TEXT_WORKLIST_TO_DO_COLOUR = 'warning';
