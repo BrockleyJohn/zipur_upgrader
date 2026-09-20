@@ -8,6 +8,13 @@
 
   $zipmigutil = 1;
 
+  require_once 'inc/functions/functions.php';
+  zipurSessionStart();
+  if (!zipurIsAuthenticated()) {
+      http_response_code(403);
+      exit('Unauthorized');
+  }
+
   try {
       require 'inc/header.php';
 

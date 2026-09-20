@@ -409,14 +409,82 @@
 
     }
 
+    function zipurWriteConfig(array $new_config) {
+        $directory = dirname(__DIR__);
+        $destination = $directory . '/config_state.php';
+        $temporary = $directory . '/config_state_' . bin2hex(random_bytes(12)) . '.php';
+        $handle = fopen($temporary, 'x');
+        if ($handle === false) {
+            throw new RuntimeException('Could not create a temporary configuration file.');
+        }
+        $contents = "<?php\nreturn " . var_export($new_config, true) . ";\n";
+        $written = fwrite($handle, $contents);
+        fclose($handle);
+        if ($written !== strlen($contents)
+            || !chmod($temporary, 0600)
+            || !rename($temporary, $destination)) {
+            @unlink($temporary);
+            throw new RuntimeException('Could not save the upgrader configuration.');
+        }
+        $legacy = $directory . '/config.json';
+        if (is_file($legacy) && !unlink($legacy)) {
+            throw new RuntimeException('Delete inc/config.json before continuing: it exposes the old password.');
+        }
+    }
+
     function zipConfigSave() {
 
         global $config, $inc_directory;
 
-        // file_put_contents( $inc_directory . DIRECTORY_SEPARATOR . "config.php", '<?php $config = ' . var_export( $config, true ) . ';' );
-        file_put_contents( $inc_directory . DIRECTORY_SEPARATOR . "config.json", json_encode( $config, JSON_PRETTY_PRINT ) );
+        zipurWriteConfig($config);
 
         zipAlert( TEXT_SAVED, 'success' );
+    }
+
+    function zipurSessionStart() {
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            return;
+        }
+        if (headers_sent()) {
+            throw new RuntimeException('Cannot start the upgrader session after output.');
+        }
+        ini_set('session.use_strict_mode', '1');
+        session_name('ZIPUR_PHOENIX_SESSION');
+        $path = rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '/phoenix/upgrader/index.php')), '/') . '/';
+        $secure = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+        session_set_cookie_params(0, $path, '', $secure, true);
+        if (!session_start()) {
+            throw new RuntimeException('Could not start the upgrader session.');
+        }
+    }
+
+    function zipurIsAuthenticated() {
+        if (empty($_SESSION['zipur_authenticated'])) {
+            return false;
+        }
+        if (time() - (int) ($_SESSION['zipur_last_activity'] ?? 0) > 1800) {
+            unset($_SESSION['zipur_authenticated'], $_SESSION['zipur_last_activity']);
+            return false;
+        }
+        $_SESSION['zipur_last_activity'] = time();
+        return true;
+    }
+
+    function zipurCsrfToken() {
+        if (empty($_SESSION['zipur_csrf'])) {
+            $_SESSION['zipur_csrf'] = bin2hex(random_bytes(32));
+        }
+        return $_SESSION['zipur_csrf'];
+    }
+
+    function zipurRequireCsrf() {
+        $expected = zipurCsrfToken();
+        $provided = $_POST['csrf_token'] ?? '';
+        if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST'
+            || !is_string($provided) || !hash_equals($expected, $provided)) {
+            http_response_code(403);
+            throw new RuntimeException('Invalid request. Reload the upgrader page and try again.');
+        }
     }
 
     /**

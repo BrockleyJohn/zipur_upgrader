@@ -10,9 +10,10 @@
 
   require $inc_directory . '/languages/english/primary.php';
   require $inc_directory . '/functions/functions.php';
+  zipurSessionStart();
   require $inc_directory . '/config.php';
 
-  if ( ! empty( $config['password'] ) && $_COOKIE['zip_upgrade_pw'] == hash( 'sha256', $config['password'] )) {
+  if ( ! empty( $config['password'] ) && zipurIsAuthenticated()) {
 
     $action = $_POST['action'] ?? '';
     $filename = $_POST['file'] ?? '';

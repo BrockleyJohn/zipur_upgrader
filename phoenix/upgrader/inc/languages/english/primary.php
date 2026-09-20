@@ -34,9 +34,9 @@
     const TEXT_BACKUP_NO_LIABILITY_AGREE = 'By clicking the following button, you agree to the above conditions.';
     const TEXT_BUTTON_START              = 'I AGREE, GET STARTED';
 
-    const TEXT_STEP_01_DESCRIPTION = 'To get started we will need to setup some security to protect this utility. Once this password is set, you will need to enter it to use this utility. If you forget this password, you can edit the config file to review.<br/><br/>Enter a password that will be used to protect this file below.';
+    const TEXT_STEP_01_DESCRIPTION = 'Create a strong password for this utility. Use at least 12 characters. Keep the entire upgrader folder behind an additional server password until setup is complete.';
     const TEXT_PASSWORD            = 'Password';
-    const TEXT_PASSWORD_TOO_SHORT  = 'You must create a password that is at least 6 characters long. The more complex the safer your utility will be.';
+    const TEXT_PASSWORD_TOO_SHORT  = 'You must create a password of at least 12 characters.';
 
     const TEXT_CREATED        = 'Created';
     const TEXT_FAILED         = 'Failed';

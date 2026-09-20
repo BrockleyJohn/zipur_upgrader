@@ -24,9 +24,6 @@
 
 */
 
-    //set this to 1 if you are having issues with password/cookies.
-    //**WARNING** if set to 1 the tool will be unprotected - SET BACK TO 0 ONCE DONE TO PROTECT THE SCRIPT!
-    $bypass_password = 0;
     $next_version = '';
     $max_version  = '';
     $num_versions = 0;
@@ -34,7 +31,8 @@
     if ( ! empty( $zipmigutil ) ) {
 
         require 'languages/english/primary.php';
-        require 'functions/functions.php';
+        require_once 'functions/functions.php';
+        zipurSessionStart();
 
         $inc_directory = dirname( __FILE__ );
         $save_changes  = 0;
@@ -42,19 +40,12 @@
         $logout        = zipVarCheck( 'logout', 0, 'FILTER_VALIDATE_INT', 0 );
 
         if ( ! empty( $logout ) ) {
-
-            if ( version_compare( PHP_VERSION, '7.3.0' ) >= 0 ) {
-                setcookie( 'zip_upgrade_pw', 'logout', [
-                    'expires'  => time() - 3600,
-                    'path'     => "/",
-                    'httponly' => "0",
-                    'samesite' => 'Lax',
-                ] );
-            } else {
-                setcookie( 'zip_upgrade_pw', 'logout', time() - 3600 );
-            }
-
+            $_SESSION = [];
+            $cookie = session_get_cookie_params();
+            setcookie(session_name(), '', time() - 3600, $cookie['path'], '', $cookie['secure'], true);
+            session_destroy();
             header( "Location: index.php" );
+            exit;
         }
 
         $step  = zipVarCheck( 'step', 0, 'FILTER_VALIDATE_INT', 0 );
@@ -85,40 +76,56 @@
 
         require $inc_directory . '/config.php';
 
+        $setup_password_too_short = false;
+        if (empty($config['password']) && $step == 2) {
+            if (($_SERVER['REQUEST_METHOD'] ?? '') !== 'POST') {
+                $step = 1;
+            } else {
+                zipurRequireCsrf();
+                $new_password = $_POST['zip_password'] ?? '';
+                if (!is_string($new_password) || strlen($new_password) < 12) {
+                    $setup_password_too_short = true;
+                    $step = 1;
+                } else {
+                    $config['password'] = password_hash($new_password, PASSWORD_DEFAULT);
+                    zipurWriteConfig($config);
+                    session_regenerate_id(true);
+                    $_SESSION['zipur_authenticated'] = true;
+                    $_SESSION['zipur_last_activity'] = time();
+                    header('Location: index.php?step=3');
+                    exit;
+                }
+            }
+        }
+
         $login_failed = 0;
         if ( ! empty( $config['password'] ) ) {
-            if ( $step == '999' ) {
-                $zip_login_password = zipVarCheck( 'zip_login_password', '' );
-
-                if ( $config['password'] == $zip_login_password ) {
-                    $cookievalue = hash( 'sha256', $zip_login_password );
-
-                    if ( version_compare( PHP_VERSION, '7.3.0' ) >= 0 ) {
-                        setcookie( 'zip_upgrade_pw', $cookievalue, [
-                            'expires'  => time() + 86400,
-                            'path'     => "/",
-                            'httponly' => "0",
-                            'samesite' => 'Lax',
-                        ] );
-                    } else {
-                        setcookie( 'zip_upgrade_pw', $cookievalue, time() + 86400 );
+            if ( $step == 999 && ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST' ) {
+                zipurRequireCsrf();
+                $zip_login_password = $_POST['zip_login_password'] ?? '';
+                $stored_password = $config['password'];
+                $valid_password = is_string($zip_login_password) &&
+                    (password_verify($zip_login_password, $stored_password)
+                    || hash_equals($stored_password, $zip_login_password));
+                if ($valid_password) {
+                    session_regenerate_id(true);
+                    $_SESSION['zipur_authenticated'] = true;
+                    $_SESSION['zipur_last_activity'] = time();
+                    if (password_needs_rehash($stored_password, PASSWORD_DEFAULT)) {
+                        $config['password'] = password_hash($zip_login_password, PASSWORD_DEFAULT);
+                        zipurWriteConfig($config);
                     }
-
-                    header( "Location: index.php" );
-
-                    $step         = ( empty( $config['step'] ) ) ? '03' : $config['step'];
-                    $justloggedin = 1;
-
-                } else {
-                    // zipAlert( TEXT_LOGIN_FAILED );
-                    $login_failed = 1;
+                    header('Location: index.php?step=3');
+                    exit;
                 }
-            } else if ( empty( $bypass_password ) && ( empty( $_COOKIE['zip_upgrade_pw'] ) || $_COOKIE['zip_upgrade_pw'] != hash( 'sha256', $config['password'] ) ) ) {
+                $login_failed = 1;
+            }
+            if ( !zipurIsAuthenticated() ) {
                 $step = '999';
             } else if ( $step < 3 ) {
                 $step = 3;
             }
-            if ( ! empty( $config['cep_files'] ) && ! empty( $config['cep_files']['root'] ) && file_exists( $config['cep_files']['root'] . DIRECTORY_SEPARATOR . 'includes' . DIRECTORY_SEPARATOR . 'configure.php' ) ) {
+            if ( zipurIsAuthenticated() && ! empty( $config['cep_files'] ) && ! empty( $config['cep_files']['root'] ) && file_exists( $config['cep_files']['root'] . DIRECTORY_SEPARATOR . 'includes' . DIRECTORY_SEPARATOR . 'configure.php' ) ) {
 
                 require( $config['cep_files']['root'] . DIRECTORY_SEPARATOR . 'includes' . DIRECTORY_SEPARATOR . 'configure.php' );
                 $cep_version = file_get_contents( $config['cep_files']['root'] . DIRECTORY_SEPARATOR . 'includes' . DIRECTORY_SEPARATOR . 'version.php' );
@@ -160,6 +167,7 @@
             }
         } else if ( $step > 2 ) {
             header( "Location: index.php?logout=1" );
+            exit;
         }
 
         header( 'Expires: Sun, 01 Jan 2014 00:00:00 GMT' );
@@ -182,6 +190,7 @@
             <meta charset="utf-8">
             <meta http-equiv="X-UA-Compatible" content="IE=edge">
             <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+            <script>window.zipurCsrfToken = <?= json_encode(zipurCsrfToken()) ?>;</script>
             <title>CE Phoenix Upgrader Utility</title>
             <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
             <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/redmond/jquery-ui.css">
@@ -251,7 +260,10 @@
             if ( ! empty( $login_failed ) ) {
                 zipAlert( TEXT_LOGIN_FAILED );
             }
-            if ( ! empty( $_COOKIE['zip_upgrade_pw'] ) || ! empty( $justloggedin ) ) {
+            if ($setup_password_too_short) {
+                zipAlert(TEXT_PASSWORD_TOO_SHORT);
+            }
+            if ( zipurIsAuthenticated() ) {
                 ?>
                 <div class="navbar-light bg-light text-right">
                     <?php

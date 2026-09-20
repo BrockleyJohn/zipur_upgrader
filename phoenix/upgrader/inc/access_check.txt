@@ -1,0 +1,1 @@
+If you can read this file over HTTP, deny direct requests to the upgrader/inc/ directory before using the upgrader.

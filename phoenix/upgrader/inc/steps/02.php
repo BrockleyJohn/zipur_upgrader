@@ -25,20 +25,9 @@
 
     if ( ! empty( $inc_directory ) ) {
 
-        if ( empty( $justloggedin ) ) {
-            $this_step_file = str_replace( '.php', '', basename( __FILE__ ) );
-            $zip_password   = zipVarCheck( 'zip_password', '' );
-
-            if ( strlen( $zip_password ) < 6 ) {
-                zipAlert( TEXT_PASSWORD_TOO_SHORT );
-                $step         = '01';
-                $require_step = '01';
-                $nextstep --;
-            } else {
-                $config['password'] = $zip_password;
-                $save_changes = 1;
-            }
-        }
+        // Initial password creation is processed in header.php before HTML is sent,
+        // so the session ID can be regenerated and the browser redirected safely.
+        $this_step_file = str_replace( '.php', '', basename( __FILE__ ) );
 
         if ( $require_step == $this_step_file || empty( $require_step ) ) {
             ?>

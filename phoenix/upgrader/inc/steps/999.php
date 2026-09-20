@@ -41,6 +41,7 @@
 
                 </div>
                 <input type="hidden" name="step" value="999"/>
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(zipurCsrfToken(), ENT_QUOTES, 'UTF-8') ?>"/>
             </form>
 
             <?php
