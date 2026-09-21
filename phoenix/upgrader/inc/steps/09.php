@@ -31,10 +31,38 @@
 
             $db                = mysqli_connect( DB_SERVER, DB_SERVER_USERNAME, DB_SERVER_PASSWORD, DB_DATABASE, MYSQL_PORT );
 
-            $cfgid  =  zipVarCheck( 'cfgid', 0, 'FILTER_VALIDATE_INT', 0 );
-            if (!empty($cfgid)){
-                mysqli_query( $db, "DELETE FROM configuration WHERE configuration_id={$cfgid}" );
+            if (isset($_POST['cfgid'])) {
+                zipurRequireCsrf();
+                $cfgid = filter_var($_POST['cfgid'], FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]);
+                if ($cfgid === false) {
+                    throw new RuntimeException('Invalid configuration entry.');
+                }
+                $candidate = mysqli_query($db, "SELECT configuration_key FROM configuration WHERE configuration_id=" . $cfgid);
+                $row = $candidate ? mysqli_fetch_assoc($candidate) : false;
+                if (!$row) {
+                    throw new RuntimeException('Configuration entry not found.');
+                }
+                $key = mysqli_real_escape_string($db, $row['configuration_key']);
+                $matches = mysqli_query($db, "SELECT COUNT(*) AS total FROM configuration WHERE configuration_key='" . $key . "'");
+                $count = $matches ? mysqli_fetch_assoc($matches) : false;
+                if (!$count || (int) $count['total'] < 2) {
+                    throw new RuntimeException('This entry is no longer duplicated.');
+                } 
+                if (!mysqli_query($db, "DELETE FROM configuration WHERE configuration_id=" . $cfgid . " LIMIT 1")) {
+                    throw new RuntimeException('Could not delete the duplicate configuration entry.');
+                }
             }
+            $duplicateRow = function ($row) {
+                $details = [];
+                foreach (['configuration_id', 'configuration_title', 'configuration_value', 'use_function', 'set_function'] as $field) {
+                    $details[] = htmlspecialchars((string) ($row[$field] ?? ''), ENT_QUOTES, 'UTF-8');
+                }
+                return '<br/>' . implode(':', $details)
+                    . ' <form action="index.php?step=9" method="post" class="d-inline-block">'
+                    . '<input type="hidden" name="cfgid" value="' . (int) $row['configuration_id'] . '">'
+                    . '<input type="hidden" name="csrf_token" value="' . htmlspecialchars(zipurCsrfToken(), ENT_QUOTES, 'UTF-8') . '">'
+                    . '<button type="submit">' . htmlspecialchars(TEXT_DELETE, ENT_QUOTES, 'UTF-8') . '</button></form>';
+            };
 
 
             ?>
@@ -53,10 +81,9 @@
                         if ( ! empty( $dupe_check["{$result['configuration_key']}"] ) ) {
                             $passed_dupe_check = 0;
 
-                            $alert_text = TEXT_STEP_09_DUPLICATE . ' ' . $result['configuration_key'];
-                            $alert_text .= '<br/>' . $result['configuration_id'] . ':' . $result['configuration_title'] . ':' . $result['configuration_value'] . ':' . $result['use_function']. ':' . $result['set_function'] . ' <a href="index.php?step=9&cfgid=' . $result['configuration_id'] . '">' . TEXT_DELETE . '</a>';
-
-                            $alert_text .= '<br/>' . $dupe_check["{$result['configuration_key']}"]['configuration_id']  . ':' . $dupe_check["{$result['configuration_key']}"]['configuration_title'] . ':' . $dupe_check["{$result['configuration_key']}"]['configuration_value'] . ':' . $dupe_check["{$result['configuration_key']}"]['use_function']. ':' . $dupe_check["{$result['configuration_key']}"]['set_function'] . ' <a href="index.php?step=9&cfgid=' . $dupe_check["{$result['configuration_key']}"]['configuration_id'] . '">' . TEXT_DELETE . '</a>';
+                            $alert_text = TEXT_STEP_09_DUPLICATE . ' ' . htmlspecialchars($result['configuration_key'], ENT_QUOTES, 'UTF-8');
+                            $alert_text .= $duplicateRow($result);
+                            $alert_text .= $duplicateRow($dupe_check[$result['configuration_key']]);
 
                             zipAlert($alert_text);
                         } else {

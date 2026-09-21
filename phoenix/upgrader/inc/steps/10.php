@@ -78,8 +78,12 @@
                     <?php
                         /** @var int $laststep */
                         echo zipButton( TEXT_BUTTON_BACK, 'secondary', 'index.php?step=3', 'fa-chevron-left', 'sm' );
-                        if ( ! empty( $upgrade['settings'] ) && $upgrade['exists'] ) {
-                            echo zipButton( TEXT_UPGRADE_NOW, 'success', 'index.php?step=11', 'fa-chevron-right', 'sm' );
+                        if ( ! empty( $upgrade['settings'] ) && $upgrade['exists'] && version_compare( $upgrade['settings']['requires'], $cep_version ) == 0 ) {
+                            echo '<form method="post" action="index.php" class="d-inline-block">';
+                            echo '<input type="hidden" name="step" value="11">';
+                            echo '<input type="hidden" name="csrf_token" value="' . htmlspecialchars(zipurCsrfToken(), ENT_QUOTES, 'UTF-8') . '">';
+                            echo zipButton( TEXT_UPGRADE_NOW, 'success', 'submit', 'fa-chevron-right', 'sm' );
+                            echo '</form>';
                         }
                     ?>
                 </div>

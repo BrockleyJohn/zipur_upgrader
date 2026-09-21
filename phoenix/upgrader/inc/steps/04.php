@@ -58,6 +58,7 @@
                     </div>
                 </div>
                 <input type="hidden" name="step" value="<?php echo $nextstep; ?>"/>
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars(zipurCsrfToken(), ENT_QUOTES, 'UTF-8') ?>"/>
             </form>
 
             <?php

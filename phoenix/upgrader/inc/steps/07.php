@@ -30,6 +30,7 @@
         if ( $require_step == $this_step_file || empty( $require_step ) ) {
 
             if ('getcore' === ($_POST['action'] ?? '')) {
+                zipurRequireCsrf();
 
                 $okset = 1;
 
@@ -127,6 +128,7 @@
                         echo zipButton( TEXT_BUTTON_BACK, 'secondary', 'index.php?step=3', 'fa-chevron-left', 'sm' );
                         echo '<form method="post" class="d-inline-block" id="getcoreform" action="index.php?step=7">';
                         echo '<input type="hidden" name="action" value="getcore">';
+                        echo '<input type="hidden" name="csrf_token" value="' . htmlspecialchars(zipurCsrfToken(), ENT_QUOTES, 'UTF-8') . '">';
                         echo zipButton( TEXT_BUTTON_PROCEED, 'success', 'submit', 'fa-chevron-right', 'sm' );
                     ?>
                     </form>

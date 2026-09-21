@@ -14,6 +14,7 @@
   require $inc_directory . '/config.php';
 
   if ( ! empty( $config['password'] ) && zipurIsAuthenticated()) {
+    zipurRequireCsrf();
 
     $action = $_POST['action'] ?? '';
     $filename = $_POST['file'] ?? '';

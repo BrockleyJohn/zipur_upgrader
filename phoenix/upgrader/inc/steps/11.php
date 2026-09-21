@@ -28,6 +28,10 @@
         $this_step_file = str_replace( '.php', '', basename( __FILE__ ) );
 
         if ( $require_step == $this_step_file || empty( $require_step ) ) {
+            zipurRequireCsrf();
+            if (empty($config['limitstep']) || $config['limitstep'] < 10) {
+                throw new RuntimeException('Review the available upgrade before applying it.');
+            }
 
             $db = mysqli_connect( DB_SERVER, DB_SERVER_USERNAME, DB_SERVER_PASSWORD, DB_DATABASE, MYSQL_PORT );
 
@@ -43,7 +47,7 @@
                     $upgrade = loadUpgradeVersion( $next_version );
                     if ( ! empty( $upgrade['settings'] ) ) {
 
-                        if ( version_compare( "{$upgrade['settings']['requires']}", "{$cep_version}" ) == 0 ) {
+                        if ( !empty($upgrade['exists']) && version_compare( "{$upgrade['settings']['requires']}", "{$cep_version}" ) == 0 ) {
                             showUpgrade( $upgrade, $config, true );
                         }
 

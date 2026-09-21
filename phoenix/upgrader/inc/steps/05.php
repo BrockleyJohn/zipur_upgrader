@@ -26,6 +26,7 @@
     if ( ! empty( $inc_directory ) ) {
 
         $this_step_file = str_replace( '.php', '', basename( __FILE__ ) );
+        zipurRequireCsrf();
         $zip_cep_root   = zipVarCheck( 'zip_cep_root', '' );
         $zip_cep_admin  = zipVarCheck( 'zip_cep_admin', '' );
 

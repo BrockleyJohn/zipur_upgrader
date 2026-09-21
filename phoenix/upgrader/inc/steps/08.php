@@ -391,7 +391,7 @@ var mergeHTMLPlugin = (function () {
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: `action=load&file=${encodeURIComponent(filename)}&index=${encodeURIComponent(index)}`,
+                body: `action=load&file=${encodeURIComponent(filename)}&index=${encodeURIComponent(index)}&csrf_token=${encodeURIComponent(window.zipurCsrfToken)}`,
             })
                 .then(response => response.json())
                 .then(data => {
@@ -453,7 +453,7 @@ var mergeHTMLPlugin = (function () {
               headers: {
                   'Content-Type': 'application/x-www-form-urlencoded',
               },
-              body: `action=${encodeURIComponent(action)}&file=${encodeURIComponent(filename)}&index=${encodeURIComponent(index)}&worklist_entry=${encodeURIComponent(document.getElementById('worklist_entry').value)}`,
+              body: `action=${encodeURIComponent(action)}&file=${encodeURIComponent(filename)}&index=${encodeURIComponent(index)}&worklist_entry=${encodeURIComponent(document.getElementById('worklist_entry').value)}&csrf_token=${encodeURIComponent(window.zipurCsrfToken)}`,
           })                
               .then(response => response.json())
               .then(data => {
