@@ -134,7 +134,10 @@
             }
             if ( zipurIsAuthenticated() && ! empty( $config['cep_files'] ) && ! empty( $config['cep_files']['root'] ) && file_exists( $config['cep_files']['root'] . DIRECTORY_SEPARATOR . 'includes' . DIRECTORY_SEPARATOR . 'configure.php' ) ) {
 
+                // on the site this inclusion is before starting session, may generate warnings in this context
+                ob_start(); // start output buffering to suppress warnings
                 require( $config['cep_files']['root'] . DIRECTORY_SEPARATOR . 'includes' . DIRECTORY_SEPARATOR . 'configure.php' );
+                ob_end_clean(); // end output buffering and discard any warnings
                 $cep_version = file_get_contents( $config['cep_files']['root'] . DIRECTORY_SEPARATOR . 'includes' . DIRECTORY_SEPARATOR . 'version.php' );
                 $cep_version = trim( $cep_version );
 
