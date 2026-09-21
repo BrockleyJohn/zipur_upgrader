@@ -452,7 +452,14 @@
         session_name('ZIPUR_PHOENIX_SESSION');
         $path = rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '/phoenix/upgrader/index.php')), '/') . '/';
         $secure = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
-        session_set_cookie_params(0, $path, '', $secure, true);
+        if (PHP_VERSION_ID >= 70300) {
+            session_set_cookie_params([
+                'lifetime' => 0, 'path' => $path, 'secure' => $secure,
+                'httponly' => true, 'samesite' => 'Strict',
+            ]);
+        } else {
+            session_set_cookie_params(0, $path, '', $secure, true);
+        }
         if (!session_start()) {
             throw new RuntimeException('Could not start the upgrader session.');
         }

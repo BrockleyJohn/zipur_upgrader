@@ -42,7 +42,14 @@
         if ( ! empty( $logout ) ) {
             $_SESSION = [];
             $cookie = session_get_cookie_params();
-            setcookie(session_name(), '', time() - 3600, $cookie['path'], '', $cookie['secure'], true);
+            if (PHP_VERSION_ID >= 70300) {
+                setcookie(session_name(), '', [
+                    'expires' => time() - 3600, 'path' => $cookie['path'],
+                    'secure' => $cookie['secure'], 'httponly' => true, 'samesite' => 'Strict',
+                ]);
+            } else {
+                setcookie(session_name(), '', time() - 3600, $cookie['path'], '', $cookie['secure'], true);
+            }
             session_destroy();
             header( "Location: index.php" );
             exit;
@@ -291,6 +298,9 @@
         }
         if ( version_compare( PHP_VERSION, '7.1.0' ) < 0 ) {
             zipAlert( 'PHP &gt;= 7.1.x is recommended. You have ' . PHP_VERSION . ' installed.' );
+        }
+        if ( PHP_VERSION_ID < 70300 ) {
+            zipAlert('Your PHP version cannot use native SameSite session cookies. Consider upgrading PHP when practical.', 'warning');
         }
         if ( ! extension_loaded( 'mysqli' ) ) {
             zipAlert( 'The php-mysqli extension is required but is not installed.' );
