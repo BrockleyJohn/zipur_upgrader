@@ -34,6 +34,24 @@
     const TEXT_BACKUP_NO_LIABILITY_AGREE = 'By clicking the following button, you agree to the above conditions.';
     const TEXT_BUTTON_START              = 'I AGREE, GET STARTED';
 
+    const TEXT_SECURITY_CHECK_FAIL = [
+        'vulnerable' => 'SECURITY CHECK FAILED. It is IMPERATIVE that you secure the upgrader inc folder from public access.<br><br>When you have made this change, please refresh the page to continue.',
+        'unknown' => 'SECURITY CHECK COULD NOT BE AUTOMATED. Please try this button to check the security status of the upgrader inc folder. If the file contents beginning <em>"If you can read this file"</em> are not displayed, you can mark it secure manually:<br><br>'
+    ];
+    const TEXT_SECURITY_UNKNOWN_LINK = '<a href="%s" target="_blank" class="btn btn-warning mt-2"><i class="fas fa-question-circle"></i> Check Security Status</a>';
+    const TEXT_DETECTED_WEB_SERVER = 'We have detected that you appear to be running under %s<br><br>';
+    const TEXT_NOT_DETECTED_WEB_SERVER = 'We could not detect whether your server is running Apache or Nginx.<br><br>';
+    const TEXT_SECURING_SERVER = [
+        'apache' => 'To secure the upgrader inc folder on an Apache server, you should create or modify the .htaccess file within the folder to restrict public access. A suitable file is provided in the distribution: upgrader/inc/.htaccess<br><br>Note: If this doesn\'t work, ensure your Apache configuration has AllowOverride All enabled for your website\'s root directory.',
+        'nginx' => 'Nginx does not support .htaccess files. You must block access via your main server configuration file. Open your Nginx site configuration (usually in /etc/nginx/sites-available/) and add this block inside your main server { ... } block:<br><br><pre>
+    location /upgrader/inc/ {
+        deny all;
+        return 403;
+    }</pre>'
+    ];
+    const TEXT_SECURITY_CHECKED_AND_OK = 'I have checked the file view using the button above and the contents starting with <em>"If you can read this file"</em> are not displayed: %s ';
+    const TEXT_BUTTON_SECURITY_CHECK = 'Yes I am really sure';
+
     const TEXT_STEP_01_DESCRIPTION = 'Create a strong password for this utility. Use at least 12 characters. Keep the entire upgrader folder behind an additional server password until setup is complete.';
     const TEXT_PASSWORD            = 'Password';
     const TEXT_PASSWORD_TOO_SHORT  = 'You must create a password of at least 12 characters.';

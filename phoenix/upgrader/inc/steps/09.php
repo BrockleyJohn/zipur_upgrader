@@ -37,6 +37,7 @@
                 if ($cfgid === false) {
                     throw new RuntimeException('Invalid configuration entry.');
                 }
+                /* if anyone cares enough about these boundary conditions to test them they are welcome to submit evidence for inclusion into addon 
                 $candidate = mysqli_query($db, "SELECT configuration_key FROM configuration WHERE configuration_id=" . $cfgid);
                 $row = $candidate ? mysqli_fetch_assoc($candidate) : false;
                 if (!$row) {
@@ -47,7 +48,7 @@
                 $count = $matches ? mysqli_fetch_assoc($matches) : false;
                 if (!$count || (int) $count['total'] < 2) {
                     throw new RuntimeException('This entry is no longer duplicated.');
-                } 
+                } */
                 if (!mysqli_query($db, "DELETE FROM configuration WHERE configuration_id=" . $cfgid . " LIMIT 1")) {
                     throw new RuntimeException('Could not delete the duplicate configuration entry.');
                 }

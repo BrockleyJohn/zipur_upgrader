@@ -230,7 +230,7 @@
      *
      * @return string
      */
-    function zipField( $type, $name, $value, $options = [], $class = '', $id = '', $onchange = '', $dataafter = '', $hideoptionall = 0, $placeholder = '', $passwordtoggle = 0 ) {
+    function zipField( $type, $name, $value, $options = [], $class = '', $id = '', $onchange = '', $dataafter = '', $hideoptionall = 0, $placeholder = '', $passwordtoggle = 0, $required = false ) {
 
         global $jslines;
 
@@ -332,6 +332,10 @@
                     $extrahtml .= ' checked="checked"';
                 }
                 $value = 1;
+            }
+
+            if ( $required ) {
+                $extrahtml .= ' required';
             }
 
             $fieldreturn .= '<input type="' . $type . '" onfocus="this.select();" name="' . $name . '" id="' . $id . '" value="' . $value . '" class="' . $class . '" style="" ' . $extrahtml . $readonly . '/>';

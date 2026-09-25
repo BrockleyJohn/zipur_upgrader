@@ -2,7 +2,7 @@
 
     /*
 
- Version: 2.0.0
+ Version: 2.2.0
  Name: Zipur CE Phoenix Upgrade Utility
 
  Author: Preston Lord
@@ -102,6 +102,12 @@
                     header('Location: index.php?step=3');
                     exit;
                 }
+            }
+        } elseif (($_SERVER['REQUEST_METHOD'] ?? '') === 'POST') {
+            zipurRequireCsrf();
+            if (($_POST['security_check'] ?? '') === '1') {
+                $config['security'] = 'secure';
+                $save_changes = 1;
             }
         }
 
@@ -274,6 +280,83 @@
                 zipAlert(TEXT_PASSWORD_TOO_SHORT);
             }
             if ( zipurIsAuthenticated() ) {
+                // ensure the tool has been properly secured
+                if (empty($config['security']) || $config['security'] !== 'secure') {
+
+                    $test_url = ( isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http" ) . "://{$_SERVER['HTTP_HOST']}" . htmlspecialchars(dirname($_SERVER['REQUEST_URI'])) . "/inc/security.json";
+                    $context = stream_context_create(['http' => ['ignore_errors' => true, 'timeout' => 3]]);
+                    //error_log("Testing security URL: " . $test_url);
+                    $security_response = @file_get_contents($test_url, false, $context);
+                    // $http_response_header is automatically populated by file_get_contents in the local scope
+                    $statusCode = 0;
+                    //error_log("HTTP response header: " . print_r($http_response_header, true));
+                    if (isset($http_response_header) && isset($http_response_header[0])) {
+                        // Extract the numeric status code (e.g., "HTTP/1.1 200 OK" -> 200)
+                        if (preg_match('{HTTP\/\S+\s+(\d+)}', $http_response_header[0], $matches)) {
+                            $statusCode = (int)$matches[1];
+                        }
+                    }
+                    //error_log("HTTP status code: " . $statusCode);
+                    //error_log("Security response: " . $security_response);
+
+                    // Evaluate security status based on the HTTP Code
+                    if ($statusCode === 200) {
+                        $data = json_decode($security_response, true);
+
+                        //error_log("Decoded security data: " . print_r($data, true));
+                        
+                        if (isset($data['status']) && $data['status'] === 'vulnerable') {
+                            // SUCCESSFUL FETCH: File is exposed
+                            $securityStatus = 'vulnerable'; 
+                        } else {
+                            // Caught a 200, but it's a generic index page or a different file
+                            $securityStatus = 'unknown'; 
+                        }
+                    } elseif ($statusCode === 403 || $statusCode === 401) {
+                        // EXPLICITLY DENIED: Server is actively protecting the folder
+                        $securityStatus = 'secure'; 
+                    } elseif ($statusCode === 404) {
+                        // PATH NOT FOUND: The loopback URL is wrong or routing blocked it entirely
+                        $securityStatus = 'unknown'; 
+                    } else {
+                        // Network error, 500 Server Error, or cURL/Stream failure
+                        $securityStatus = 'unknown'; 
+                    }
+
+                    // save the result
+                    $config['security'] = $securityStatus;
+                    $save_changes = 1;
+
+                    switch ($securityStatus) {
+                        case 'vulnerable':
+                        case 'unknown':
+
+                            $serverSoftware = $_SERVER['SERVER_SOFTWARE'] ?? '';
+                            $webserver = 'unknown';
+                            if (stripos($serverSoftware, 'nginx') !== false) {
+                                $webserver = 'nginx';
+                            } elseif (stripos($serverSoftware, 'apache') !== false) {
+                                $webserver = 'apache';
+                            }
+                            zipAlert(sprintf(TEXT_SECURITY_CHECK_FAIL[$securityStatus]) . ($securityStatus == 'unknown' ? sprintf(TEXT_SECURITY_UNKNOWN_LINK, 'inc/access_check.txt') : ''), 'danger');
+                            if ($securityStatus === 'unknown') {
+                                zipAlert('<form action="' . htmlspecialchars($_SERVER['REQUEST_URI']) . '" method="post">' . sprintf(TEXT_SECURITY_CHECKED_AND_OK, zipField('checkbox', 'security_check', 0, [], '', '', '', '', 0, '', 0, true)) . '<input type="hidden" name="csrf_token" value="' . htmlspecialchars(zipurCsrfToken(), ENT_QUOTES, 'UTF-8') . '"/><button type="submit" class="btn btn-warning">' . TEXT_BUTTON_SECURITY_CHECK . '</button></form>', 'danger');
+                            }
+                            $msg = '';
+                            if ($webserver !== 'unknown') {
+                                $msg = sprintf(TEXT_DETECTED_WEB_SERVER, $webserver) . TEXT_SECURING_SERVER[$webserver];
+                            } else {
+                                $msg = TEXT_NOT_DETECTED_WEB_SERVER . TEXT_SECURING_SERVER['apache'] . '<br><br>' . TEXT_SECURING_SERVER['nginx'];
+                            }
+                            zipAlert($msg, 'warning');
+
+                            break;
+                        case 'secure':
+                            // No action needed
+                            break;
+                    }
+
+                }
                 ?>
                 <div class="navbar-light bg-light text-right">
                     <?php
