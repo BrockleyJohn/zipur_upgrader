@@ -884,11 +884,18 @@
                 foreach ( $upgrade['upgrade_files'] as $upgrade_file ) {
 
                     $upgrade_file_short = str_replace( 'inc' . $ds . 'versions' . $ds . $next_version . $ds . 'files', '', $upgrade_file );
+                    //error_log("update_file_short initially: '$upgrade_file_short'");
 
                     if ( $ds == '\\' ) {
+                        // check for drive letter and remove if necessary
+                        if ( preg_match( "/^[A-Z]:/i", $upgrade_file_short ) ) {
+                            $upgrade_file_short = preg_replace( "/^[A-Z]:/i", '', $upgrade_file_short );
+                        }
                         $upgrade_file_short = preg_replace( "/^\\\admin/", $ds . $admin_folder, $upgrade_file_short );
+                        //error_log("update_file_short after Windows admin replacement: '$upgrade_file_short'");
                     } else {
                         $upgrade_file_short = preg_replace( "/^\/admin/", '/' . $admin_folder, $upgrade_file_short );
+                        //error_log("update_file_short after Unix admin replacement: '$upgrade_file_short'");
                     }
 
                     if ( ! $process ) {
@@ -950,15 +957,25 @@
                             }
                         }
 
+                        //error_log( "Preparing to copy file '{$upgrade_file}' short '{$upgrade_file_short}'" );
                         $from_file = $upgrade_file;
                         $to_file   = $config['cep_files']['root'] . '' . $upgrade_file_short;
+                        //error_log( "Copying file from '{$from_file}' to '{$to_file}'" );
+
+                        // delay copying version file until successful to support rerunning copies if needed
 
                         $target      = pathinfo( $to_file );
+                        //error_log( "Target pathinfo: " . print_r($target, true) );
 
                         if ( ! file_exists( $target['dirname'] ) ) {
                             $extra_label .= '<br/><small>' . TEXT_CREATE_DIR . ' : ' . $target['dirname'] . '</small>';
                             mkdir( $target['dirname'], 0755, true );
                         }
+
+                        if ( $upgrade_file_short === '\includes\version.php' || $upgrade_file_short === '/includes/version.php' ) {
+                            $version_copy = [ 'from' => $upgrade_file, 'to' => $to_file, 'short' => $upgrade_file_short ];
+                            continue; // skip the rest of the loop for the version file
+                        } 
 
                         copy( $upgrade_file, $to_file );
 
@@ -991,6 +1008,37 @@
 
                     $b++;
                 }
+
+                // copy the version file last if it exists
+                if ( $process && $upgrade['installed'] && ! empty( $version_copy ) ) {
+                    $upgrade_file      = $version_copy['from'];
+                    $to_file           = $version_copy['to'];
+                    $upgrade_file_short = $version_copy['short'];
+                    $extra_label = '';
+
+                    copy( $upgrade_file, $to_file );
+
+                        $filedata_1 = file_get_contents( $upgrade_file );
+                        $filedata_1 = hash( 'md5', $filedata_1 );
+
+                        $filedata_2 = file_get_contents( $to_file );
+                        $filedata_2 = hash( 'md5', $filedata_2 );
+
+                        if ( $filedata_1 == $filedata_2 ) {
+                            $tag = '<div class="alert alert-success" role="alert" style="display: inline-block; padding: 2px 1rem; width: auto; margin: 0px 1rem;">' . TEXT_COPIED . '</div> ';
+                        } else {
+                            $tag                  = '<div class="alert alert-danger" role="alert" style="display: inline-block; padding: 2px 1rem; width: auto; margin: 0px 1rem;">' . TEXT_COPY_FAILED . '</div> ';
+                            $upgrade['installed'] = false;
+                        }
+
+                        $label = $extra_label . '<br/><small><i class="far fa-copy"></i> ' . $upgrade_file . ' <i class="fas fa-arrow-right"></i> ';
+                        $label .= $to_file . '</small>';
+
+                        unset( $filedata_1 );
+
+                        echo '<li class="list-group-item align-middle" style="padding: 2px 8px;"><i class="fas fa-file-alt"></i> ' . $tag . $upgrade_file_short . ' ' . $label . '</li>';
+
+                }
             } else {
                 echo '<li class="list-group-item align-middle" style="padding: 2px 8px;"><i class="fas fa-file-alt"></i> ' . TEXT_NO_FILE_CHANGES . '</li>';
 
@@ -1007,6 +1055,11 @@
                 foreach ( $upgrade['settings']['delete'] as $delete ) {
 
                     $delete_info = '';
+
+                    // check for drive letter and remove if necessary
+                    if ( preg_match( "/^[A-Z]:/i", $delete ) ) {
+                        $delete = preg_replace( "/^[A-Z]:/i", '', $delete );
+                    }
 
                     //force leading slash
                     if ( $delete[0] != $ds ) {
@@ -1104,8 +1157,8 @@
                         }
                     }
 
-                    $extra_class = ( $enable['force'] ) ? 'alert-danger' : 'alert-warning';
-                    $extra_text = ( $enable['force'] ) ? '!!REQUIRED!! ' : '';
+                    $extra_class = ( $enable['force'] ?? false ) ? 'alert-danger' : 'alert-warning';
+                    $extra_text = ( $enable['force'] ?? false ) ? '!!REQUIRED!! ' : '';
 
                     echo '<li class="list-group-item align-middle alert ' . $extra_class . '" style="padding: 2px 8px;"><i class="fas fa-puzzle-piece"></i> ' . $extra_text . TEXT_ENABLE_MODULE . ' : ' . $enable['name'] . $skip_text . '</li>';
 
@@ -1421,13 +1474,27 @@
     function cartmartCheckVersion( $version ) {
 
         $return = callCartmart( $version, '' );
-        if ( $return['httpcode'] == 200 ) {
+        if ( $return['httpcode'] == 404 ) {
+            return ['not_found', []];
+        } elseif ( $return['httpcode'] == 200 ) {
             $response = json_decode( $return['response'], true );
             if ( ! empty( $response['next_version'] )  ) {
+                // get statement of Phoenix version scheme so can validate format of next_version
+                if (isset($response['later'])) {
+                    if (! is_array($response['later'])) {
+                        throw new Exception( 'Invalid response from Cartmart: "later" should be an array: ' . htmlspecialchars(print_r($response, true)) );
+                    }
+                    foreach ($response['later'] as $later_version) {
+                        // get statement of Phoenix version scheme so can validate format of next_version
+                        if (empty($later_version) /* || !preg_match('/^\d+\.\d+\.\d+$/D', $later_version) */) {
+                            throw new Exception( 'Invalid response from Cartmart: "later" contains an invalid version: ' . htmlspecialchars(print_r($response, true)) );
+                        }
+                    }
+                }
                 return [ $response['next_version'], $response['later'] ?? [] ];
             } else {
                 error_log('Cartmart response: ' . print_r($response, true));
-                throw new Exception( 'Invalid response from Cartmart: ' . $return['response'] );
+                throw new Exception( 'Invalid response from Cartmart: ' . htmlspecialchars($return['response']) );
             }
         } else {
             throw new Exception( 'Error connecting to Cartmart. HTTP code: ' . $return['httpcode'] );
@@ -1452,6 +1519,8 @@
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
         curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
         curl_setopt($ch, CURLOPT_TIMEOUT, 30);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
         $response = curl_exec($ch);
         $httpcode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         $info = curl_getinfo($ch);
@@ -1466,9 +1535,14 @@
      */
     function fetchUpgradeFiles( $version ) {
 
+        // get statement of Phoenix version scheme so can validate format of version
         $okset = 1;
 
         $ziparch = class_exists('ZipArchive');
+        // confirm that unzip functionality is available
+        if (!$ziparch && (!class_exists('PharData') || !extension_loaded('zlib'))) {
+            throw new Exception(TEXT_UNZIP_NOT_AVAILABLE);
+        }
         $version_folder = 'inc/versions/' . $version;
         if ( ! is_dir( $version_folder ) ) {
             throw new Exception( TEXT_VERSION_DIRECTORY_CREATE_FAILED);
@@ -1492,7 +1566,7 @@
         }
         $work_folder .= '/';
 
-        $version_url = 'https://api.github.com/repos/BrockleyJohn/core_updates/zipball/v' . $version;
+        $version_url = 'https://api.github.com/repos/BrockleyJohn/core_updates/' . ($ziparch ? 'zipball' : 'tarball') . '/v' . $version;
         $zipext = $ziparch ? '.zip' : '.tar.gz';
         $version_zip = $work_folder . 'upgrade' . $zipext;
 
@@ -1500,17 +1574,18 @@
         $ch      = curl_init();
         curl_setopt( $ch, CURLOPT_URL, $version_url );
         curl_setopt( $ch, CURLOPT_RETURNTRANSFER, false );
-        curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, false );
+        curl_setopt( $ch, CURLOPT_SSL_VERIFYPEER, true );
+        curl_setopt( $ch, CURLOPT_SSL_VERIFYHOST, 2 );
         curl_setopt( $ch, CURLOPT_FOLLOWLOCATION, true );
         curl_setopt( $ch, CURLOPT_CONNECTTIMEOUT, 10 );
         curl_setopt( $ch, CURLOPT_USERAGENT, 'PhoenixUpgrader/' . $GLOBALS['zipFileVersion'] );
         curl_setopt( $ch, CURLOPT_FILE, $fp );
-        curl_exec( $ch );
+        $downloaded = curl_exec( $ch );
         $info = curl_getinfo($ch);
         curl_close( $ch );
         fclose( $fp );
 
-        if ( $info['http_code'] !== 200 && $info['http_code'] !== 302 || ! file_exists( $version_zip ) ) {
+        if ( $downloaded === false || $info['http_code'] !== 200 && $info['http_code'] !== 302 || ! file_exists( $version_zip ) || filesize($version_zip) === 0 ) {
             error_log('Update Download info: ' . print_r($info, true));
             echo '<span class="text-danger">' . sprintf(TEXT_VERSION_DOWNLOAD_FAILED, $version, $version_url, $version_zip) . '</span>';
             $okset = 0;
@@ -1520,9 +1595,14 @@
                 $zip = new ZipArchive;
                 $res = $zip->open( $version_zip );
                 if ( $res === true ) {
-                    $zip->extractTo( $work_folder );
+                    $extracted = $zip->extractTo( $work_folder );
                     $zip->close();
-                    echo '<br/><span class="text-success">' . sprintf(TEXT_VERSION_UNZIP_SUCCESS, $version) . '</span>';
+                    if (!$extracted) {
+                        echo '<br/><span class="text-danger">' . sprintf(TEXT_VERSION_UNZIP_FAILED, $version_zip) . '</span>';
+                        $okset = 0;
+                    } else {
+                        echo '<br/><span class="text-success">' . sprintf(TEXT_VERSION_UNZIP_SUCCESS, $version) . '</span>';
+                    }
                     unlink( $version_zip );//deletes downloaded zip
                 } else {
                     echo '<br/><span class="text-danger">' . sprintf(TEXT_VERSION_UNZIP_FAILED, $version_zip) . '</span>';
@@ -1532,10 +1612,14 @@
                 $gz_extract = new PharData( $version_zip );
                 $gz_extract->decompress(); // creates files.tar
                 $tar_extract = new PharData( str_replace( '.gz', '', $version_zip ) );
-                $tar_extract->extractTo( $work_folder );
-                unlink( str_replace( '.gz', '', $version_zip ) );//deletes tar
-                unlink( $version_zip );//deletes downloaded zip
-                echo '<br/><span class="text-success">' . sprintf(TEXT_VERSION_UNZIP_SUCCESS, $version) . '</span>';
+                if (!$tar_extract->extractTo( $work_folder )) {
+                    echo '<br/><span class="text-danger">' . sprintf(TEXT_VERSION_UNZIP_FAILED, $version_zip) . '</span>';
+                    $okset = 0;
+                } else {
+                    unlink( str_replace( '.gz', '', $version_zip ) );//deletes tar
+                    unlink( $version_zip );//deletes downloaded zip
+                    echo '<br/><span class="text-success">' . sprintf(TEXT_VERSION_UNZIP_SUCCESS, $version) . '</span>';
+                }
             }
             if ($okset) {
                 // Lets get the actual folder name that was extracted (when using github api the folder name is not consistent so we need to find it). Work dir contains only the extracted folder so we should be safe to just get the first folder in there
@@ -1548,6 +1632,10 @@
                 }
                 // the next level should be /versions/ then the version number
                 if ( is_dir( $extracted_folder . '/versions/' . $version ) ) {
+                    // on windows servers the move will fail if the target folder already exists
+                    if (is_dir($version_folder) && strtoupper(substr(PHP_OS, 0, 3)) === 'WIN') {
+                        @rmdir($version_folder);
+                    }
                     // move the files to the correct location
                     if (! rename( $extracted_folder . '/versions/' . $version, $version_folder ) ) {
                         echo '<br/><span class="text-danger">' . sprintf(TEXT_VERSION_MOVE_FAILED, $version) . '</span>';

@@ -16,19 +16,21 @@
   if ( ! empty( $config['password'] ) && zipurIsAuthenticated()) {
 
     $filename = $_POST['file'] ?? '';
+    $filename_regex = str_replace( '\\', '\\\\', $filename );
     $filepath = pathinfo( $filename);
     $corepath = $_POST['corepath'] ?? '';
+    $corepath_regex = str_replace( '\\', '\\\\', $corepath );
     $corepathtest = pathinfo( $corepath );
 
     //if ( empty( $filename ) || ! preg_match( '/^[a-zA-Z0-9_\-\/]+$/', $filepath['dirname'] ) || ! preg_match( '/^[a-zA-Z0-9_\-\.]+$/', $filepath['basename'] ) ) {
-    if ( empty( $filename ) || ! preg_match( '/^(?!.*\/\.\.(?:\/.*|$))[a-zA-Z0-9_\-\.\/]+$/', $filename ) ) {
+    if ( empty( $filename ) || ! preg_match( '/^(?!.*\/\.\.(?:\/.*|$))[a-zA-Z0-9_\-\.\/\\\\]+$/', $filename_regex ) ) {
       error_log( 'Invalid file name "' . $filename . '"' );
-      die( 'oldCode = `Invalid file name "' . htmlspecialchars( $filename ) . '"`' );
+      die( 'oldCode = `Invalid file name "' . htmlspecialchars( $filename_regex ) . '"`' );
     }
     //if ( empty( $corepath ) || ! preg_match( '/^[a-zA-Z0-9_\-\/]+$/', $corepathtest['dirname'] ) || ! preg_match( '/^[a-zA-Z0-9_\-\.]+$/', $corepathtest['basename'] ) ) {
-    if ( empty( $corepath ) || ! preg_match( '/^(?!.*\/\.\.(?:\/.*|$))[a-zA-Z0-9_\-\.\/]+$/', $corepath ) ) {
+    if ( empty( $corepath ) || ! preg_match( '/^(?!.*\/\.\.(?:\/.*|$))[a-zA-Z0-9_\-\.\/\\\\]+$/', $corepath_regex ) ) {
       error_log( 'Invalid core path "' . $corepath . '"' );
-      die( 'oldCode = `Invalid core path "' . htmlspecialchars( $corepath ) . '"`' );
+      die( 'oldCode = `Invalid core path "' . htmlspecialchars( $corepath_regex ) . '"`' );
     }
 
     if ( ! empty( $config['cep_files'] ) && ! empty( $config['cep_files']['root'] ) && file_exists( $config['cep_files']['root'] . DIRECTORY_SEPARATOR . 'includes' . DIRECTORY_SEPARATOR . 'configure.php' ) ) {

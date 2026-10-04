@@ -110,14 +110,22 @@
                         $worklist = file_exists( $inc_directory . '/worklist.json' ) ? json_decode( file_get_contents( $inc_directory . '/worklist.json' ), true ) : [];
 
                         $b = 0;
+                        $admin_path = str_replace( $GLOBALS['config']['cep_files']['root'], '', $GLOBALS['config']['cep_files']['admin'] );
+
                         foreach ( $zip_altered_files as $zip_added_file ) {
 
                           switch (true) {
-                            case ! isset($worklist["{$zip_added_file}"]):
-                              $worklist_style = TEXT_WORKLIST_NEW;
-                              break;
+                            case ($zip_added_file === DIRECTORY_SEPARATOR . 'includes' . DIRECTORY_SEPARATOR . 'configure.php'):
+                            case ($zip_added_file === $admin_path . DIRECTORY_SEPARATOR . 'includes' . DIRECTORY_SEPARATOR . 'configure.php'):
+                              $worklist_style = TEXT_WORKLIST_EXPECTED;
+                              break; 
                             case ($worklist[$zip_added_file]['status'] ?? '') === 'complete':
                               $worklist_style = TEXT_WORKLIST_DONE;
+                              break;
+                            case ! isset($worklist["{$zip_added_file}"]):
+                              $worklist_style = TEXT_WORKLIST_NEW;
+                              //error_log("Worklist item for file {$zip_added_file} is NEW.");
+                              //error_log('Not ' . $admin_path . DIRECTORY_SEPARATOR . 'includes' . DIRECTORY_SEPARATOR . 'configure.php');
                               break;
                             default:
                               $worklist_style = TEXT_WORKLIST_TO_DO;

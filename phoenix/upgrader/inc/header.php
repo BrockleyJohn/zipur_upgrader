@@ -32,6 +32,7 @@
 
         require 'languages/english/primary.php';
         require_once 'functions/functions.php';
+        try {
         zipurSessionStart();
 
         $inc_directory = dirname( __FILE__ );
@@ -170,16 +171,24 @@
                     } */
                     if ( empty($next_version) || ! is_dir( __DIR__ . '/versions/' . $next_version ) ) {
                         list($next_version, $available_updates) = cartmartCheckVersion($cep_version);
-                        //error_log('Cartmart check result: next_version=' . $next_version . ' available_updates=' . print_r($available_updates, true));
-                        foreach ($available_updates as $update) {
-                            if (! is_dir( __DIR__ . '/versions/' . $update['version'] ) ) {
-                                mkdir( __DIR__ . '/versions/' . $update['version'], 0755 );
-                            }
+                        // catch current version not found at cartmart (too old)
+                        if ( 'not_found' === $next_version ) {
+                            $next_version = $cep_version; // fallback to current version
+                        } else {
+                            if (! is_dir( __DIR__ . '/versions/' . $next_version ) ) {
+                                mkdir( __DIR__ . '/versions/' . $next_version, 0755 );
+                            } 
+                            //error_log('Cartmart check result: next_version=' . $next_version . ' available_updates=' . print_r($available_updates, true));
+                            foreach ($available_updates as $update) {
+                                if (! is_dir( __DIR__ . '/versions/' . $update['version'] ) ) {
+                                    mkdir( __DIR__ . '/versions/' . $update['version'], 0755 );
+                                }
+                            } 
                         }
                     }
                 }
 
-                $admin_folder = str_replace( $config['cep_files']['root'] . '/', '', $config['cep_files']['admin'] );
+                $admin_folder = str_replace( $config['cep_files']['root'] . DIRECTORY_SEPARATOR, '', $config['cep_files']['admin'] );
             }
         } else if ( $step > 2 ) {
             header( "Location: index.php?logout=1" );
@@ -241,13 +250,10 @@
         <div class="row">
         <div id="contentText" class="col p-2">
         <div class="row">
-            <div class="col" style="text-align: left; padding: 0px 40px; margin-bottom: 10px;">
-                Check out Preston's <a href="https://www.youtube.com/user/zipurman"
-                                   target="_blank">YouTube Channel</a> for Instructions on this tool and more!
-            </div>
+            <!--div class="col" style="text-align: left; padding: 0px 40px; margin-bottom: 10px;">
+            </div-->
             <div class="col" style="text-align: right; padding: 0px 40px; margin-bottom: 10px;">
-                Created by @zipurman (<a href="https://PhoenixAddons.com" target="_blank">PhoenixAddons.com</a>)
-                Now maintained by @BrockleyJohn (<a href="https://cartmart.uk" target="_blank">Cartmart.uk</a>)
+                Maintained &amp; extended by @BrockleyJohn (<a href="https://cartmart.uk" target="_blank">Cartmart.uk</a>) - Created by @zipurman (<a href="https://PhoenixAddons.com" target="_blank">PhoenixAddons.com</a>)
             </div>
         </div>
         <div class="bg-dark text-light p-4 m-0 mw-100 rounded">
@@ -273,6 +279,8 @@
         </div>
         <br/>
         <?php
+
+
             if ( ! empty( $login_failed ) ) {
                 zipAlert( TEXT_LOGIN_FAILED );
             }
@@ -357,6 +365,11 @@
                     }
 
                 }
+                // check it's possible to unzip updates
+                if (!class_exists('ZipArchive') && (!class_exists('PharData') || !extension_loaded('zlib'))) {
+                    zipAlert(sprintf(TEXT_RESOLVE_TO_USE, TEXT_UNZIP_NOT_AVAILABLE), 'danger');
+                }
+                //error_log('ZipArchive class exists: ' . (class_exists('ZipArchive') ? 'yes' : 'no'));
                 ?>
                 <div class="navbar-light bg-light text-right">
                     <?php
@@ -372,12 +385,19 @@
                     ?>
                 </div>
                 <?php
+                if (!empty($next_version) && $next_version === $cep_version) {
+                    zipAlert(sprintf(TEXT_CURRENT_VERSION_NOT_FOUND, $cep_version), 'danger');
+                }
+
             }
         ?>
 
         <hr/>
 
         <?php
+        } catch (Exception $e) {
+            zipAlert( sprintf( TEXT_EXCEPTION_OCCURRED, $e->getMessage() ), 'danger' );
+        }
 
         if ( empty( $output_buffer ) ) {
             zipAlert( 'php output_buffering should be enabled in php.ini' );

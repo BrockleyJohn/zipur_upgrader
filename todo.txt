@@ -2,8 +2,10 @@
 - DONE - better code compare view
 - DONE - building a work list of files to check/deal with
 - auto install required new modules
+- step 9 (config duplicates) - check database and skip if unique index
 - deal with added files
-- PRO - moving customised files to proper template locations if in shop folder structure
+- PRO - revert an updated file to core version (backup first) - for when changes were pointless or file is an old core version not updated
+- PRO - moving customised files to proper template locations if in shop folder structure and overwrite with core version
 - PRO - flag when overridden files are updated
 - PRO - when language files are updated and custom files exist, automatically add new definitions to localised file
 - PRO - spotting addons and offering links to download updated versions

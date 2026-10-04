@@ -122,14 +122,14 @@
                             $downloadtext = '<i class="fas fa-check text-success"></i>';
                         }
 
-                        zipDashListItem( sprintf(TEXT_STEP_03_DOWNLOAD_CORE, $cep_version) . ' ' . $downloadtext, 6, 7, $limitstep );
+                        zipDashListItem( sprintf(TEXT_STEP_03_DOWNLOAD_CORE, $cep_version ?? TEXT_YOUR_CURRENT_VERSION) . ' ' . $downloadtext, 6, 7, $limitstep );
 
                         $upgradetext = '';
                         if ( $config['limitstep'] >= 8 && (!empty($config['core_changed_files']) || !empty($config['core_added_files']))) {
                             $upgradetext = '<i class="fas fa-check text-success"></i>';
                         }
 
-                        zipDashListItem( sprintf(TEXT_STEP_03_REVIEW_CORE, $cep_version) . ' ' . $upgradetext, 7, 8, $limitstep );
+                        zipDashListItem( sprintf(TEXT_STEP_03_REVIEW_CORE, $cep_version ?? TEXT_YOUR_CURRENT_VERSION) . ' ' . $upgradetext, 7, 8, $limitstep );
 
                         $tablescounttext = '';
                         if ( $config['limitstep'] >= 9) {
@@ -144,15 +144,21 @@
 
                                 $upgrade = loadUpgradeVersion( $next_version );
 
-                                if ( version_compare( "{$upgrade['settings']['requires']}", "{$cep_version}" ) == 0 ) {
-
-                                    $targettablecheck = ( $config['limitstep'] >= 10 ) ? ' <i class="fas fa-check text-success"></i>' : '';
-                                    zipDashListItem( TEXT_STEP_03_UPGRADE_REVIEW . $next_version . $targettablecheck, 9, 10, $limitstep );
+                                if (! isset($upgrade['settings']['requires']) || empty($upgrade['settings']['requires'])) {
+                                    zipAlert( TEXT_VERSION_UPGRADE_INFO_INCOMPLETE, 'danger');
 
                                 } else {
 
-                                    zipAlert( TEXT_NO_MEET_REQUIREMENT_UPGRADES, 'success');
+                                    if ( version_compare( "{$upgrade['settings']['requires']}", "{$cep_version}" ) == 0 ) {
 
+                                        $targettablecheck = ( $config['limitstep'] >= 10 ) ? ' <i class="fas fa-check text-success"></i>' : '';
+                                        zipDashListItem( TEXT_STEP_03_UPGRADE_REVIEW . $next_version . $targettablecheck, 9, 10, $limitstep );
+
+                                    } else {
+
+                                        zipAlert( TEXT_NO_MEET_REQUIREMENT_UPGRADES, 'success');
+
+                                    }
                                 }
 
                             } else {

@@ -29,6 +29,8 @@
 
     const TEXT_SUPPORT_LINK = '<a href="%s" target="_blank" class="btn btn-info mt-2"><i class="fas fa-life-ring"></i> Get Help</a>';
 
+    const TEXT_EXCEPTION_OCCURRED = 'An uncaught exception occurred: %s';
+
     const TEXT_BACKUP_WARNING            = 'MAKE SURE YOU HAVE COMPLETED A RECENT BACKUP OF YOUR DATA AND YOUR FILES BEFORE PROCEEDING.';
     const TEXT_BACKUP_NO_LIABILITY       = 'THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.';
     const TEXT_BACKUP_NO_LIABILITY_AGREE = 'By clicking the following button, you agree to the above conditions.';
@@ -55,6 +57,11 @@
     const TEXT_STEP_01_DESCRIPTION = 'Create a strong password for this utility. Use at least 12 characters. Keep the entire upgrader folder behind an additional server password until setup is complete.';
     const TEXT_PASSWORD            = 'Password';
     const TEXT_PASSWORD_TOO_SHORT  = 'You must create a password of at least 12 characters.';
+
+    const TEXT_UNZIP_NOT_AVAILABLE = 'Unzip functionality is not available on this server. Please ensure that either the ZipArchive class is available or that PharData and the zlib extension are enabled.';
+    const TEXT_RESOLVE_TO_USE = '<b>You must resolve the following before you can use the upgrader utility:</b><br>%s';
+    const TEXT_CURRENT_VERSION_NOT_FOUND = 'Upgrade details for your current version %s are not available - probably because it is too old. Please download the corresponding addon version from the Phoenix Cart addons area.';
+    const TEXT_YOUR_CURRENT_VERSION = 'your current version';
 
     const TEXT_CREATED        = 'Created';
     const TEXT_FAILED         = 'Failed';
@@ -130,6 +137,7 @@
     const TEXT_UPGRADE_NOW              = 'UPGRADE NOW';
     const TEXT_NO_UPGRADES              = 'There are no newer upgrades available in your /versions/ folder. You can get new version changes online at <a href="https://phoenixcart.org/forum/addons/" target="_blank">https://phoenixcart.org/forum/addons/</a>';
     const TEXT_NO_MEET_REQUIREMENT_UPGRADES              = 'There are no upgrades available for you in the /versions/ folder. You can get new version changes online at <a href="https://phoenixcart.org/forum/addons/" target="_blank">https://phoenixcart.org/forum/addons/</a>';
+    const TEXT_VERSION_UPGRADE_INFO_INCOMPLETE = 'Error - version or upgrade information is incomplete. Please try refreshing the page.';
 
     const TEXT_STEP_10_DESCRIPTION = 'Below is a summary of what will be done to upgrade to version ';
 
@@ -157,16 +165,20 @@
     const TEXT_STEP_08_DIFFS_WORKLIST_COMPLETE = 'MARK COMPLETE / IGNORE';
     const TEXT_STEP_11_DESCRIPTION = 'Below is the output from your upgrade to ';
 
+    const TEXT_WORK_ITEM = 'WORK ITEM';
+    // worklist styles
     const TEXT_WORKLIST_DONE_COLOUR = 'success';
     const TEXT_WORKLIST_NEW_COLOUR = 'danger';
+    const TEXT_WORKLIST_EXPECTED_COLOUR = 'info';
     const TEXT_WORKLIST_TO_DO_COLOUR = 'warning';
     const TEXT_WORKLIST_DONE_ICON = 'check-circle';
     const TEXT_WORKLIST_NEW_ICON = 'plus-square';
+    const TEXT_WORKLIST_EXPECTED_ICON = 'info-circle';
     const TEXT_WORKLIST_TO_DO_ICON = 'hourglass-half';
     define('TEXT_WORKLIST_DONE', 'fas fa-' . TEXT_WORKLIST_DONE_ICON . ' text-' . TEXT_WORKLIST_DONE_COLOUR);
     define('TEXT_WORKLIST_NEW', 'fas fa-' . TEXT_WORKLIST_NEW_ICON . ' text-' . TEXT_WORKLIST_NEW_COLOUR);
+    define('TEXT_WORKLIST_EXPECTED', 'fas fa-' . TEXT_WORKLIST_EXPECTED_ICON . ' text-' . TEXT_WORKLIST_EXPECTED_COLOUR);
     define('TEXT_WORKLIST_TO_DO', 'fas fa-' . TEXT_WORKLIST_TO_DO_ICON . ' text-' . TEXT_WORKLIST_TO_DO_COLOUR);
-    const TEXT_WORK_ITEM = 'WORK ITEM';
 
     const TEXT_WORKLIST_EMPTY = 'Your worklist is currently empty. When you review the comparison of your diffs of your changed files, you can add items to your worklist to keep notes of the customisations you have made, any actions you need to take now or for a later update, and any progress.';
 
@@ -187,9 +199,9 @@
     const TEXT_VERSION_MOVE_SUCCESS = 'UPDATE TO VERSION %s FETCHED SUCCESSFULLY';
 
     const TEXT_FILES_TEST_ROOT_WRITE_IMAGES    = 'Write test file to CE Phoenix Images Directory';
-    const TEXT_FILES_TEST_ROOT_DELETE_IMAGES   = 'Delete test file from CE Phoneix Images Directory';
+    const TEXT_FILES_TEST_ROOT_DELETE_IMAGES   = 'Delete test file from CE Phoenix Images Directory';
     const TEXT_FILES_TEST_ROOT_WRITE_INCLUDES  = 'Write test file to CE Phoenix Includes Directory';
-    const TEXT_FILES_TEST_ROOT_DELETE_INCLUDES = 'Delete test file from CE Phoneix Includes Directory';
+    const TEXT_FILES_TEST_ROOT_DELETE_INCLUDES = 'Delete test file from CE Phoenix Includes Directory';
     const TEXT_MYSQL_TEST_CREATE_TABLE_CEP     = 'Create test table in CE Phoenix MySQL Database';
     const TEXT_MYSQL_TEST_DELETE_TABLE_CEP     = 'Drop test table in CE Phoenix MySQL Database';
 
