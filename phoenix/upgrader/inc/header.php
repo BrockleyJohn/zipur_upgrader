@@ -2,9 +2,11 @@
 
     /*
 
- Version: 2.2.0
+ Version: 2.1.0
  Name: Zipur CE Phoenix Upgrade Utility
 
+ Extended by: John Ferguson @BrockleyJohn phoenix@cartmart.uk
+ more addons at cartmart.uk
  Author: Preston Lord
  	 phoenixaddons.com / @zipurman / plord@inetx.ca
 

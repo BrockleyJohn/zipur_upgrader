@@ -63,6 +63,7 @@
                         zipAlert( TEXT_FILES_ADMIN_SUCCESS, 'success' );
                         $okset ++;
                     } else {
+                        error_log( 'Admin check failed on "' . $config['cep_files']['admin'] . DIRECTORY_SEPARATOR . 'includes' . DIRECTORY_SEPARATOR . 'header.php' . '"' );
                         zipAlert( TEXT_FILES_ADMIN_FAILED );
                     }
 

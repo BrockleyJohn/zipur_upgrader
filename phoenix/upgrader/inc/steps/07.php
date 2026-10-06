@@ -100,6 +100,7 @@
                                     if (!$extracted) {
                                         echo '<br/><span class="text-danger">' . ZIPUR_CODE_COMPARE_UNZIP_FAILED . ' (' . $newpath . ')</span>';
                                         $okset = 0;
+                                        error_log('Failed to extract zip file: ' . $newpath);
                                     } else {
                                         echo '<br/><span class="text-success">' . ZIPUR_CODE_COMPARE_UNZIP_SUCCESS . '</span>';
                                     }
@@ -107,6 +108,7 @@
                                 } else {
                                     echo '<br/><span class="text-danger">' . ZIPUR_CODE_COMPARE_UNZIP_FAILED . ' (' . $newpath . ')</span>';
                                     $okset = 0;
+                                    error_log('Failed to open zip file: ' . $newpath);
                                 }
                             } else {
                                 $gz_extract = new PharData( $newpath );
@@ -115,6 +117,7 @@
                                 if (!$tar_extract->extractTo( 'inc/clean_core/' )) {
                                     echo '<br/><span class="text-danger">' . ZIPUR_CODE_COMPARE_UNZIP_FAILED . ' (' . str_replace( '.gz', '', $newpath ) . ')</span>';
                                     $okset = 0;
+                                    error_log('Failed to extract tar file: ' . str_replace( '.gz', '', $newpath ));
                                 } else {
                                     echo '<br/><span class="text-success">' . ZIPUR_CODE_COMPARE_UNZIP_SUCCESS . '</span>';
                                 }

@@ -946,11 +946,18 @@
                                 $from = $config['cep_files']['root'] . $upgrade_file_short;
                                 $to = $inc_directory . $ds . 'change_backups' . $ds . $next_version . $upgrade_file_short;
                                 $target = pathinfo( $to );
-                                if ( ! file_exists( $target['dirname'] ) ) {
-                                    mkdir( $target['dirname'], 0755, true );
+                                if ( ! file_exists( $target['dirname'] ) && ! mkdir( $target['dirname'], 0755, true ) ) {
+                                    $upgrade['installed'] = false;
+                                    zipAlert( sprintf( TEXT_CANNOT_CREATE_BACKUP_DIR, $target['dirname'] ) );
+                                    return;
                                 }
                                 //error_log( "Backing up changed file before overwrite: from {$from} to {$to}" );
-                                copy($from, $to);
+                                if (! copy($from, $to)) {
+                                    $upgrade['installed'] = false;
+                                    zipAlert( sprintf( TEXT_CANNOT_CREATE_BACKUP_COPY, $to ) );
+                                    return;
+
+                                }
                                 $extra_label .= '<br/><small class="text-danger">' . TEXT_BACKED_UP . ' : ' . $upgrade_file_short . '</small>';
                                 //remove from future warnings as file is now replaced by core of this version
                                 unset($config['core_changed_files'][$key]);
@@ -969,7 +976,11 @@
 
                         if ( ! file_exists( $target['dirname'] ) ) {
                             $extra_label .= '<br/><small>' . TEXT_CREATE_DIR . ' : ' . $target['dirname'] . '</small>';
-                            mkdir( $target['dirname'], 0755, true );
+                            if (! mkdir( $target['dirname'], 0755, true )) {
+                                $upgrade['installed'] = false;
+                                zipAlert( sprintf( TEXT_CANNOT_CREATE_TARGET_DIR, $target['dirname'] ) );
+                                return;
+                            }
                         }
 
                         if ( $upgrade_file_short === '\includes\version.php' || $upgrade_file_short === '/includes/version.php' ) {
@@ -978,7 +989,7 @@
                         } 
 
                         copy( $upgrade_file, $to_file );
-
+ 
                         $filedata_1 = file_get_contents( $upgrade_file );
                         $filedata_1 = hash( 'md5', $filedata_1 );
 
