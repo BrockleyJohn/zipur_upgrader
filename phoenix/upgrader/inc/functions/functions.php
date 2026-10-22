@@ -123,11 +123,11 @@
 
         $extrahtml = '';
         if ( ! empty( $id ) ) {
-            $extrahtml .= 'id="' . $id . '"';
+            $extrahtml .= 'id="' . htmlspecialchars((string) $id, ENT_QUOTES, 'UTF-8') . '"';
         }
         if ( ! empty( $params ) ) {
             foreach ( $params as $key => $val ) {
-                $extrahtml .= ' data-' . $key . '="' . $val . '"';
+                $extrahtml .= ' data-' . htmlspecialchars((string) $key, ENT_QUOTES, 'UTF-8') . '="' . htmlspecialchars((string) $val, ENT_QUOTES, 'UTF-8') . '"';
             }
         }
 
@@ -139,7 +139,7 @@
             $buttoncode .= $text . '</button>';
         } else {
             $buttoncode .= '<a ' . $extrahtml . ' class="m-2 mr-4 pr-4 pl-2 btn btn-' . $size . ' btn-' . $class;
-            $buttoncode .= '" href="' . $link . '"';
+            $buttoncode .= '" href="' . htmlspecialchars((string) $link, ENT_QUOTES, 'UTF-8') . '"';
             $buttoncode .= '>';
             if ( ! empty( $icon ) ) {
                 $buttoncode .= '<i class="pr-2 pl-2 mr-1 fas ' . $icon . '"></i> ';
@@ -197,7 +197,7 @@
             $extrahtml .= ' style="' . $style . '" ';
         }
         if ( ! empty( $id ) ) {
-            $extrahtml .= ' id="' . $id . '" ';
+            $extrahtml .= ' id="' . htmlspecialchars((string) $id, ENT_QUOTES, 'UTF-8') . '" ';
         }
 
         echo '<div class="form-group row pt-' . $padding . ' pb-' . $padding . ' ' . $class . '" ' . $extrahtml . '>';
@@ -645,6 +645,75 @@
     }
 
     /**
+     * @param $filename
+     * 
+     * @return bool
+     */
+    function coreChangeShouldOverride( $filename ) {
+        // check if a file is one that can be overridden
+
+        // language files
+        if (strpos($filename, DIRECTORY_SEPARATOR . 'includes' . DIRECTORY_SEPARATOR . 'languages' . DIRECTORY_SEPARATOR) === 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @param $filename
+     * 
+     * @return mixed
+     */
+    function coreFileIsOverridden( $filename ) {
+        $fullcorename = $GLOBALS['config']['cep_files']['root'] . $filename;
+        // check for language files
+        if (strpos($filename, DIRECTORY_SEPARATOR . 'includes' . DIRECTORY_SEPARATOR . 'languages' . DIRECTORY_SEPARATOR) === 0) {
+            $mapname = str_replace( DIRECTORY_SEPARATOR . 'includes' . DIRECTORY_SEPARATOR . 'languages' . DIRECTORY_SEPARATOR, '', $filename );
+            // cater for main language files e.g. english.php
+            if (strpos($mapname, DIRECTORY_SEPARATOR) === false) {
+                // main language file e.g. english.php
+                $language = strtok($mapname, '.');
+                $mapname = substr($mapname, strlen($language));
+            } else {
+                // get the language off the front
+                $language = strtok($mapname, DIRECTORY_SEPARATOR);
+                $mapname = substr($mapname, strlen($language) + 1);
+            }
+
+            $mappedname = language::map_to_translation($mapname, $language);
+            error_log("Checking if language file is overridden: \n{$fullcorename} maps to \n{$mappedname}\nusing language {$language} and mapname {$mapname}\n" . ($mappedname !== $fullcorename ? 'OVERRIDDEN' : 'NOT OVERRIDDEN'));
+            $shortmapped = str_replace( $GLOBALS['config']['cep_files']['root'], '', $mappedname );
+
+            return ($mappedname !== $fullcorename ? $shortmapped : false);
+        }
+
+        // check for template files
+
+        // check for components
+
+        // check for pages
+
+        // check for classes
+
+        return false;
+    }
+
+    function templateInitialise() {
+        global $db;
+        $set_template = mysqli_fetch_assoc( mysqli_query( $db, "SELECT `configuration_value` FROM `configuration` WHERE `configuration_key` = 'TEMPLATE_SELECTION'" ) )['configuration_value'];
+
+        // future-proof loads by using catalog autoloader
+        require $GLOBALS['config']['cep_files']['root'] . '/includes/system/class_index.php';
+        require $GLOBALS['config']['cep_files']['root'] . '/includes/system/autoloader.php';
+        $GLOBALS['class_index'] = catalog_autoloader::register();
+        // load template to check for overridden files
+        define('BOOTSTRAP_CONTENT', mysqli_fetch_assoc( mysqli_query( $db, "SELECT `configuration_value` FROM `configuration` WHERE `configuration_key` = 'BOOTSTRAP_CONTENT'" ) )['configuration_value']);
+        $GLOBALS['Template'] = new Template($set_template);
+
+        return $set_template;
+    }
+    /**
      * @param $dirname
      *
      * @return bool
@@ -781,6 +850,9 @@
             }
 
             zipAlert( TEXT_NOT_SAFE_LEGEND);
+            $set_template = templateInitialise();
+            zipAlert( sprintf(TEXT_STEP_10_CURRENT_TEMPLATE, $set_template), 'info' );
+
             zipAlert( TEXT_SAFE_LEGEND, 'success');
 
 
@@ -904,34 +976,72 @@
 
                         $file_conflict = false;
 
-                        foreach ( $config['core_changed_files'] as $key => $file ) {
-                            if ( "{$file}" == "{$upgrade_file_short}" ) {
-                                $tag                 = '<div class="alert alert-danger" role="alert" style="display: inline-block; padding: 2px 1rem; width: auto; margin: 0px 1rem;">' . TEXT_NOT_SAFE . '</div>';
-                                $upgrade['conflict'] = true;
-                                $file_conflict = true;
-                                break;
+                        if ($override_file = coreFileIsOverridden($upgrade_file_short)) {
+                            $file_conflict = true;
+
+                            $tag = '<div class="alert alert-danger" role="alert" style="display: inline-block; padding: 2px 1rem; width: auto; margin: 0px 1rem;">' . TEXT_OVERRIDE . '</div>';
+
+                        } else {
+                            foreach ( $config['core_changed_files'] as $key => $file ) {
+                                if ( "{$file}" == "{$upgrade_file_short}" ) {
+                                    $tag                 = '<div class="alert alert-danger" role="alert" style="display: inline-block; padding: 2px 1rem; width: auto; margin: 0px 1rem;">' . TEXT_NOT_SAFE . '</div>';
+                                    $upgrade['conflict'] = true;
+                                    $file_conflict = true;
+                                    break;
+                                }
                             }
                         }
 
+                        $diff_button = '';
                         $worklist_item = '';
                         $params = [ 'file' => $upgrade_file_short, 'index' => $b ];
                         $workid = 'workitem_' . $b;
                         
-                        if (true == $file_conflict && isset($worklist["{$upgrade_file_short}"])) {
+                        if (true == $file_conflict) {
 
-                            $work_entry = $worklist["{$upgrade_file_short}"];
-                            if ( $work_entry['status'] == 'complete' ) {
-                                $worklist_item = zipButton( TEXT_WORK_ITEM, TEXT_WORKLIST_DONE_COLOUR . ' worklink', '#', 'fa-' . TEXT_WORKLIST_DONE_ICON, 'sm', $workid, $params );
+                            // check if core update file is actually different from site/override file
+
+                            $filedata_1 = file_get_contents( $upgrade_file );
+                            $filedata_1 = hash( 'md5', $filedata_1 );
+
+                            $filedata_2 = file_get_contents( $config['cep_files']['root'] . '' . ( $override_file ? $override_file : $upgrade_file_short ) );
+                            $filedata_2 = hash( 'md5', $filedata_2 );
+
+                            if ( $filedata_1 == $filedata_2 ) {
+
+                                $diff_button = '<span class="badge badge-success">' . TEXT_UPGRADE_NO_DIFF . '</span>';
+                                $tag = '<div class="alert alert-success" role="alert" style="display: inline-block; padding: 2px 1rem; width: auto; margin: 0px 1rem;">' . TEXT_SAFE . '</div>';
+                                $file_conflict = false;
+
+                                if ( isset($worklist["{$upgrade_file_short}"])) {
+
+                                    $work_entry = $worklist["{$upgrade_file_short}"];
+                                    if ( $work_entry['status'] == 'complete' ) {
+                                        $worklist_item = zipButton( TEXT_WORK_ITEM, TEXT_WORKLIST_DONE_COLOUR . ' worklink', '#', 'fa-' . TEXT_WORKLIST_DONE_ICON, 'sm', $workid, $params );
+                                    } else {
+                                        $worklist_item = zipButton( TEXT_WORK_ITEM, TEXT_WORKLIST_TO_DO_COLOUR . ' worklink', '#', 'fa-' . TEXT_WORKLIST_TO_DO_ICON, 'sm', $workid, $params );
+                                    }
+
+                                } else {
+
+                                    $worklist_item = zipButton( TEXT_WORK_ITEM, TEXT_WORKLIST_NEW_COLOUR . ' worklink', '#', 'fa-' . TEXT_WORKLIST_NEW_ICON, 'sm', $workid, $params );
+                                }
+
                             } else {
-                                $worklist_item = zipButton( TEXT_WORK_ITEM, TEXT_WORKLIST_TO_DO_COLOUR . ' worklink', '#', 'fa-' . TEXT_WORKLIST_TO_DO_ICON, 'sm', $workid, $params );
+
+                                $diff_button = zipButton( TEXT_BUTTON_DIFFS, 'secondary btn-sm btn-diff', '#', 'fa-compress-alt', 'md', 'diff_' . $b, ['filename' => ( $override_file ? $override_file : $upgrade_file_short ), 'corepath' => 'inc' . $ds . 'versions' . $ds . $next_version . $ds . 'files', 'corefile' => $upgrade_file_short, 'index' => $b] );
+
+                                $worklist_style = TEXT_WORKLIST_NEW;
+                                $workfile = $override_file ? $override_file : $upgrade_file_short;
+                                if ( isset($worklist["{$workfile}"])) {
+                                    $worklist_style = $worklist["{$workfile}"] === 'complete' ? TEXT_WORKLIST_DONE : TEXT_WORKLIST_TO_DO;
+                                }
+                                $worklist_item = ' <i id="worklist_' . $b . '" class="' . $worklist_style . '"></i></span></li>';
+
                             }
-
-                        } elseif (true == $file_conflict) {
-
-                            $worklist_item = zipButton( TEXT_WORK_ITEM, TEXT_WORKLIST_NEW_COLOUR . ' worklink', '#', 'fa-' . TEXT_WORKLIST_NEW_ICON, 'sm', $workid, $params );
                         }
 
-                        echo '<li class="list-group-item align-middle justify-content-between d-flex" style="padding: 2px 8px;"><span><i class="fas fa-file-alt"></i> ' . $tag . ' ' . $upgrade_file_short . '</span>' . $worklist_item . '</li>';
+                        echo '<li class="list-group-item align-middle justify-content-between d-flex" style="padding: 2px 8px;"><span><i class="fas fa-file-alt"></i> ' . $tag . ' ' . $upgrade_file_short . '</span><span>' . $diff_button . $worklist_item . '</span></li>';
 
                     } else {
 
@@ -1179,7 +1289,7 @@
             }
             echo '</ul>';
 
-            worklistPopup();
+            //worklistPopup(); // JAF moved to step as now showing diffs in step 10
 
             if ( ! empty( $output_buffer ) ) {
 //                flush();
@@ -1191,6 +1301,411 @@
             zipAlert( TEXT_UPGRADE_BROKEN );
 
         }
+    }
+
+    function outputDiffContent($step = '08') {
+        $instructions = ($step == '08') ? TEXT_STEP_08_DIFFS_INSTRUCTIONS : TEXT_STEP_10_DIFFS_INSTRUCTIONS;
+?>
+<script>
+let oldCode = '', newCode = '';
+</script>
+<div class="modal" tabindex="-1" id="diffModal">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="diffModalTitle"></h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" data-dismiss="modal" aria-label="<?= TEXT_CLOSE ?>"> X </button>
+      </div>
+      <div class="modal-body" id="modalBody">
+        <div class="text-center mb-3">
+            <span class="badge bg-secondary text-white"><?= $instructions ?></span>
+        </div>
+        <div class="diff-container">
+            <div class="code-block"><pre><code id="oldOutput" class="php"></code></pre></div>
+        </div>
+        <div class="text-center mt-3">
+          <form id="worklistForm" style="display: inline-block; width:100%;">
+            <span class=""><?= TEXT_STEP_08_DIFFS_WORKLIST_ENTRY ?> <i id="worklistEntryStatus" class=""></i></span>
+            <?= zipField( 'textarea', 'worklist_entry', '', [], 'form-control', 'worklist_entry' ) ?>
+            <div id="worklistButtons" class="mt-2">
+            </div>
+          </form>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-dismiss="modal"><?= TEXT_CLOSE ?></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Diff Match Patch JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/diff_match_patch/20121119/diff_match_patch.js"></script>
+<!-- Highlight.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/languages/php.min.js"></script>
+<script>
+// plugin so we can escape HTML in the code blocks but still have the diff highlights work correctly (by merging the original HTML with the highlighted HTML)
+var mergeHTMLPlugin = (function () {
+  'use strict';
+
+  var originalStream;
+
+  /**
+   * @param {string} value
+   * @returns {string}
+   */
+  function escapeHTML(value) {
+    return value
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;');
+  }
+
+  /* plugin itself */
+
+  /** @type {HLJSPlugin} */
+  const mergeHTMLPlugin = {
+    // preserve the original HTML token stream
+    "before:highlightElement": ({ el }) => {
+      originalStream = nodeStream(el);
+    },
+    // merge it afterwards with the highlighted token stream
+    "after:highlightElement": ({ el, result, text }) => {
+      if (!originalStream.length) return;
+
+      const resultNode = document.createElement('div');
+      resultNode.innerHTML = result.value;
+      result.value = mergeStreams(originalStream, nodeStream(resultNode), text);
+      el.innerHTML = result.value;
+    }
+  };
+
+  /* Stream merging support functions */
+
+  /**
+   * @typedef Event
+   * @property {'start'|'stop'} event
+   * @property {number} offset
+   * @property {Node} node
+   */
+
+  /**
+   * @param {Node} node
+   */
+  function tag(node) {
+    return node.nodeName.toLowerCase();
+  }
+
+  /**
+   * @param {Node} node
+   */
+  function nodeStream(node) {
+    /** @type Event[] */
+    const result = [];
+    (function _nodeStream(node, offset) {
+      for (let child = node.firstChild; child; child = child.nextSibling) {
+        if (child.nodeType === 3) {
+          offset += child.nodeValue.length;
+        } else if (child.nodeType === 1) {
+          result.push({
+            event: 'start',
+            offset: offset,
+            node: child
+          });
+          offset = _nodeStream(child, offset);
+          // Prevent void elements from having an end tag that would actually
+          // double them in the output. There are more void elements in HTML
+          // but we list only those realistically expected in code display.
+          if (!tag(child).match(/br|hr|img|input/)) {
+            result.push({
+              event: 'stop',
+              offset: offset,
+              node: child
+            });
+          }
+        }
+      }
+      return offset;
+    })(node, 0);
+    return result;
+  }
+
+  /**
+   * @param {any} original - the original stream
+   * @param {any} highlighted - stream of the highlighted source
+   * @param {string} value - the original source itself
+   */
+  function mergeStreams(original, highlighted, value) {
+    let processed = 0;
+    let result = '';
+    const nodeStack = [];
+
+    function selectStream() {
+      if (!original.length || !highlighted.length) {
+        return original.length ? original : highlighted;
+      }
+      if (original[0].offset !== highlighted[0].offset) {
+        return (original[0].offset < highlighted[0].offset) ? original : highlighted;
+      }
+
+      /*
+      To avoid starting the stream just before it should stop the order is
+      ensured that original always starts first and closes last:
+
+      if (event1 == 'start' && event2 == 'start')
+        return original;
+      if (event1 == 'start' && event2 == 'stop')
+        return highlighted;
+      if (event1 == 'stop' && event2 == 'start')
+        return original;
+      if (event1 == 'stop' && event2 == 'stop')
+        return highlighted;
+
+      ... which is collapsed to:
+      */
+      return highlighted[0].event === 'start' ? original : highlighted;
+    }
+
+    /**
+     * @param {Node} node
+     */
+    function open(node) {
+      /** @param {Attr} attr */
+      function attributeString(attr) {
+        return ' ' + attr.nodeName + '="' + escapeHTML(attr.value) + '"';
+      }
+      // @ts-ignore
+      result += '<' + tag(node) + [].map.call(node.attributes, attributeString).join('') + '>';
+    }
+
+    /**
+     * @param {Node} node
+     */
+    function close(node) {
+      result += '</' + tag(node) + '>';
+    }
+
+    /**
+     * @param {Event} event
+     */
+    function render(event) {
+      (event.event === 'start' ? open : close)(event.node);
+    }
+
+    while (original.length || highlighted.length) {
+      let stream = selectStream();
+      result += escapeHTML(value.substring(processed, stream[0].offset));
+      processed = stream[0].offset;
+      if (stream === original) {
+        /*
+        On any opening or closing tag of the original markup we first close
+        the entire highlighted node stack, then render the original tag along
+        with all the following original tags at the same offset and then
+        reopen all the tags on the highlighted stack.
+        */
+        nodeStack.reverse().forEach(close);
+        do {
+          render(stream.splice(0, 1)[0]);
+          stream = selectStream();
+        } while (stream === original && stream.length && stream[0].offset === processed);
+        nodeStack.reverse().forEach(open);
+      } else {
+        if (stream[0].event === 'start') {
+          nodeStack.push(stream[0].node);
+        } else {
+          nodeStack.pop();
+        }
+        render(stream.splice(0, 1)[0]);
+      }
+    }
+    return result + escapeHTML(value.substr(processed));
+  }
+
+  return mergeHTMLPlugin;
+
+}());
+    // add plugin to highlight.js
+    hljs.addPlugin(mergeHTMLPlugin);
+    // the diff <ins>/<del> markup is intentional (text is escaped by diff_prettyHtml and merged by the plugin)
+    hljs.configure({ ignoreUnescapedHTML: true });
+
+    let diffModal;
+    
+    // assign modal once bootstrap is loaded
+    document.addEventListener('DOMContentLoaded', function() {
+      diffModal = {
+        show: function() { $('#diffModal').modal('show'); },
+        hide: function() { $('#diffModal').modal('hide'); }
+      };
+    });
+
+    document.querySelectorAll('.btn-diff').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const filename = this.getAttribute('data-filename');
+            const corepath = this.getAttribute('data-corepath');
+            const corefile = this.getAttribute('data-corefile');
+            const index = this.getAttribute('data-index');
+            // check for existing worklist entry for this file
+            fetch(`worklist.php`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `action=load&file=${encodeURIComponent(filename)}&corefile=${encodeURIComponent(corefile)}&index=${encodeURIComponent(index)}&csrf_token=${encodeURIComponent(window.zipurCsrfToken)}`,
+            })
+                .then(response => response.json())
+                .then(data => {
+                    const worklistEntry = data.entry || '';
+                    document.getElementById('worklist_entry').value = worklistEntry;
+                    const buttonsDiv = document.getElementById('worklistButtons');
+                    buttonsDiv.innerHTML = data.buttons;
+                    if (data.entrystatus) {
+                        const statusBadge = document.getElementById('worklistEntryStatus');
+                        if (data.entrystatus === 'complete') {
+                            statusBadge.className = '<?= TEXT_WORKLIST_DONE ?>';
+                        } else if (data.entrystatus === 'todo') {
+                            statusBadge.className = '<?= TEXT_WORKLIST_TO_DO ?>';
+                        } else {
+                            statusBadge.className = '';
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading worklist entry:', error);
+                    document.getElementById('worklist_entry').value = '';
+                    document.getElementById('worklistButtons').innerHTML = '';
+                });
+            // generate diffs
+            fetch(`diff.php`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `file=${encodeURIComponent(filename)}&corepath=${encodeURIComponent(corepath)}&corefile=${encodeURIComponent(corefile)}&csrf_token=${encodeURIComponent(window.zipurCsrfToken)}`,
+            })
+              .then(response => response.json().then(data => {
+                  if (!response.ok) throw new Error(data.error || 'Diff request failed');
+                  return data;
+              }))
+              .then(diffData => {
+                  oldCode = typeof diffData.oldCode === 'string' ? diffData.oldCode : 'Cannot display this file as UTF-8 text';
+                  newCode = typeof diffData.newCode === 'string' ? diffData.newCode : 'Cannot display this file as UTF-8 text';
+                  document.getElementById('diffModalTitle').textContent = filename;
+                  diffModal.show();
+                  createDiff();
+              })
+              .catch(error => {
+                  document.getElementById('diffModalTitle').textContent = 'Error';
+                  document.getElementById('modalBody').textContent = 'Could not load diff: ' + error;
+                  diffModal.show();
+              });
+        });
+    });
+
+    // bubbling click handler on form for worklist buttons (add/edit/remove)
+    const worklistForm = document.getElementById('worklistForm');
+    worklistForm.addEventListener('click', function(e) {
+      if (e.target && e.target.matches('.listentry')) {
+          const action = e.target.getAttribute('data-action');
+          const filename = e.target.getAttribute('data-file');
+          const index = e.target.getAttribute('data-index');
+          // handle the action (add/edit/remove) for the worklist entry
+          fetch(`worklist.php`, {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/x-www-form-urlencoded',
+              },
+              body: `action=${encodeURIComponent(action)}&file=${encodeURIComponent(filename)}&index=${encodeURIComponent(index)}&worklist_entry=${encodeURIComponent(document.getElementById('worklist_entry').value)}&csrf_token=${encodeURIComponent(window.zipurCsrfToken)}`,
+          })                
+              .then(response => response.json())
+              .then(data => {
+                // add some positive feedback
+                if (data.success) {
+                    //alert('Worklist updated successfully');
+                    diffModal.hide();
+                    if (data.entrystatus) {
+                      const statusBadge = document.getElementById(`worklist_${index}`);
+                      if (data.entrystatus === 'complete') {
+                          statusBadge.className = '<?= TEXT_WORKLIST_DONE ?>';
+                      } else if (data.entrystatus === 'todo') {
+                          statusBadge.className = '<?= TEXT_WORKLIST_TO_DO ?>';
+                      } else {
+                          statusBadge.className = '';
+                      }
+                    }
+                } else if (data.error) {
+                    alert('Error: ' + data.error);
+                }
+              })
+              .catch(error => {
+                  console.error('Error updating worklist entry:', error);
+                  // add some error feedback
+                  alert('Error updating worklist entry: ' + error);
+              });
+      }
+
+    });
+    worklistForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+    });
+
+function createDiff() {
+    const dmp = new diff_match_patch();
+    const diffOld = dmp.diff_main(oldCode, newCode);
+    //const diffNew = dmp.diff_main(newCode, oldCode);
+
+    dmp.diff_cleanupSemantic(diffOld);
+    //dmp.diff_cleanupSemantic(diffNew);
+
+    // Convert to HTML with inline highlights
+    document.getElementById('oldOutput').innerHTML = dmp.diff_prettyHtml(diffOld);
+    //document.getElementById('newOutput').innerHTML = dmp.diff_prettyHtml(diffNew);
+
+    hljs.highlightAll();
+}
+
+function renderTable(tableId, diff) {
+  const table = document.getElementById(tableId);
+  table.innerHTML = '';
+  const lines = diff_prettyLines(diff);
+
+  lines.forEach((line, index) => {
+      const tr = document.createElement('tr');
+
+      const tdNum = document.createElement('td');
+      tdNum.className = 'line-num';
+      tdNum.textContent = index + 1;
+
+      const tdCode = document.createElement('td');
+      tdCode.className = 'code';
+      tdCode.innerHTML = `<pre><code class="php">${line}</code></pre>`;
+
+      tr.appendChild(tdNum);
+      tr.appendChild(tdCode);
+      table.appendChild(tr);
+  });
+}
+
+function diff_prettyLines(diff) {
+  const html = [];
+  diff.forEach(part => {
+      let text = part[1].replace(/</g, "&lt;").replace(/>/g, "&gt;");
+      if (part[0] === 1) { // Added
+          text = `<ins>${text}</ins>`;
+      } else if (part[0] === -1) { // Removed
+          text = `<del>${text}</del>`;
+      }
+      html.push(text);
+  });
+  return html.join('').split("\n");
+}
+</script>
+
+<?php
     }
 
     function worklistPopup() {
@@ -1223,7 +1738,10 @@
     
     // assign modal once bootstrap is loaded
     document.addEventListener('DOMContentLoaded', function() {
-      entryModal = new bootstrap.Modal(document.getElementById('entryModal'));
+      entryModal = {
+        show: function() { $('#entryModal').modal('show'); },
+        hide: function() { $('#entryModal').modal('hide'); }
+      };
     });
 
     document.querySelectorAll('.worklink').forEach(button => {
@@ -1547,6 +2065,15 @@
     function fetchUpgradeFiles( $version ) {
 
         // get statement of Phoenix version scheme so can validate format of version
+
+        // check that the upgrade version is available
+        $return = callCartmart( $version, '' );
+        if ( $return['httpcode'] == 404 ) {
+            echo '<span class="text-info">' . sprintf(TEXT_UPGRADE_NOT_AVAILABLE, $version) . '</span>';
+            return 0;
+        }
+
+
         $okset = 1;
 
         $ziparch = class_exists('ZipArchive');

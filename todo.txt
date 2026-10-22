@@ -1,6 +1,7 @@
-- look into encrypting the password
+- DONE - look into encrypting the password
 - DONE - better code compare view
 - DONE - building a work list of files to check/deal with
+- step 10 should check if new core file is different from site file (in showUpgrade(process = false))
 - auto install required new modules
 - step 9 (config duplicates) - check database and skip if unique index
 - deal with added files

@@ -75,6 +75,8 @@
     const TEXT_BUTTON_LOGIN   = 'LOGIN';
     const TEXT_BUTTON_LOGOUT  = 'LOG OUT';
     const TEXT_BUTTON_VIEW_WORKLIST = 'VIEW WORKLIST';
+    const TEXT_BUTTON_WORKLIST_RETURN_LIST = 'BACK TO STEP LIST';
+    const TEXT_BUTTON_WORKLIST_RETURN_STEP = 'BACK TO CURRENT STEP';
     const TEXT_LOGIN_FAILED   = 'LOGIN FAILED';
 
     const MYSQL_PORT = 3306;
@@ -138,14 +140,18 @@
     const TEXT_DELETE_NOT_NEEDED                   = 'You do not have this file in your store. Skipping Delete.';
     const TEXT_COPY_FAILED              = 'COPY FAILED';
     const TEXT_UPGRADE_NOW              = 'UPGRADE NOW';
+    const TEXT_UPGRADE_NOT_AVAILABLE = 'Upgrade to version %s is not (yet) available.';
+    const TEXT_UPGRADE_FROM_NOT_AVAILABLE = 'The next version for %s is not available.';
     const TEXT_NO_UPGRADES              = 'There are no newer upgrades available in your /versions/ folder. You can get new version changes online at <a href="https://phoenixcart.org/forum/addons/" target="_blank">https://phoenixcart.org/forum/addons/</a>';
     const TEXT_NO_MEET_REQUIREMENT_UPGRADES              = 'There are no upgrades available for you in the /versions/ folder. You can get new version changes online at <a href="https://phoenixcart.org/forum/addons/" target="_blank">https://phoenixcart.org/forum/addons/</a>';
     const TEXT_VERSION_UPGRADE_INFO_INCOMPLETE = 'Error - version or upgrade information is incomplete. Please try refreshing the page.';
 
     const TEXT_STEP_10_DESCRIPTION = 'Below is a summary of what will be done to upgrade to version ';
+    const TEXT_STEP_10_CURRENT_TEMPLATE = 'Your store template is currently set to: <strong>%s</strong>. If any of the files in your template override an upgrade file, that will be shown as a warning and you should review them carefully in case they throw errors e.g. because new language definitions in the upgrade need to be applied.';
 
     const TEXT_SAFE                = ' Verified - no conflict';
     const TEXT_NOT_SAFE            = ' Warning - conflict';
+    const TEXT_OVERRIDE            = ' Warning - overridden';
 
     const TEXT_SAFE_LEGEND                = 'Files marked as "Verified - no conflict" were un-altered from the original version when you started your upgrade. These are safe to upgrade without concern.';
     const TEXT_NOT_SAFE_LEGEND            = 'Files marked as "Warning - conflict" were altered from their original state. This means that core changes were made to these files and they should be reviewed to make sure once overwritten that your store functionality is not broken due to previous customizations.';
@@ -161,12 +167,18 @@
     const TEXT_UPGRADE_BROKEN      = 'The upgrade folder is missing data.';
     const TEXT_SQL_ERROR           = 'SQL ERROR - CHECK LOGS FOR FULL DETAILS';
 
-    const TEXT_STEP_08_DIFFS_INSTRUCTIONS = 'Site file is shown with deletions from core in red and addtions in green.';
+    const TEXT_STEP_08_DIFFS_INSTRUCTIONS = 'Site file is shown with deletions from core in red and additions in green.';
     const TEXT_STEP_08_DIFFS_WORKLIST_ENTRY = 'File Worklist Entry';
     const TEXT_STEP_08_DIFFS_WORKLIST_ADD = 'SAVE TO WORKLIST';
     const TEXT_STEP_08_DIFFS_WORKLIST_EDIT = 'EDIT WORKLIST ENTRY';
     const TEXT_STEP_08_DIFFS_WORKLIST_COMPLETE = 'MARK COMPLETE / IGNORE';
+
+    const TEXT_STEP_10_DIFFS_INSTRUCTIONS = 'Site/override file is shown with deletions from upgrade in red and additions in green.';
+
     const TEXT_STEP_11_DESCRIPTION = 'Below is the output from your upgrade to ';
+
+    const TEXT_CORE_CHANGE_OVERRIDDEN = 'OVERRIDDEN BY<br>%s';
+    const TEXT_CORE_CHANGE_SHOULD_OVERRIDE = 'COPY TO TEMPLATE';
 
     const TEXT_WORK_ITEM = 'WORK ITEM';
     // worklist styles
@@ -184,6 +196,7 @@
     define('TEXT_WORKLIST_TO_DO', 'fas fa-' . TEXT_WORKLIST_TO_DO_ICON . ' text-' . TEXT_WORKLIST_TO_DO_COLOUR);
 
     const TEXT_WORKLIST_EMPTY = 'Your worklist is currently empty. When you review the comparison of your diffs of your changed files, you can add items to your worklist to keep notes of the customisations you have made, any actions you need to take now or for a later update, and any progress.';
+    const TEXT_UPGRADE_NO_DIFF = 'UPGRADE = SITE';
 
     const TEXT_DIRECTORY_CREATE_ERROR         = 'Creating Clean Core Directory Failed!';
     const ZIPUR_CODE_COMPARE_DOWNLOAD_ERROR   = 'DOWNLOAD ERROR';

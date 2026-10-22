@@ -55,6 +55,7 @@
                                 if ( version_compare( "{$upgrade['settings']['requires']}", "{$cep_version}" ) == 0 ) {
 
                                     showUpgrade( $upgrade, $config );
+                                    outputDiffContent('10');
 
                                 }
                             }

@@ -49,6 +49,7 @@
 
                         if ( !empty($upgrade['exists']) && version_compare( "{$upgrade['settings']['requires']}", "{$cep_version}" ) == 0 ) {
                             showUpgrade( $upgrade, $config, true );
+                            worklistPopup();
                         }
 
                     }

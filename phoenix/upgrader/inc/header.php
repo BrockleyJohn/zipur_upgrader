@@ -2,8 +2,9 @@
 
     /*
 
- Version: 2.1.0
+ Version: 2.1.1
  Name: Zipur CE Phoenix Upgrade Utility
+ v2.1.1 2026-10-22 add diffs to step 10, worklist to step 11, template checking language files
 
  Extended by: John Ferguson @BrockleyJohn phoenix@cartmart.uk
  more addons at cartmart.uk
@@ -377,8 +378,19 @@
                     <?php
                         $worklist = file_exists( $inc_directory . '/worklist.json' ) ? json_decode( file_get_contents( $inc_directory . '/worklist.json' ), true ) : [];
 
+                        if ( isset($_GET['step']) && (int)$_GET['step'] > 0 || basename($_SERVER['SCRIPT_NAME']) == 'view_worklist.php' ) {
+                            echo zipButton( TEXT_BUTTON_WORKLIST_RETURN_LIST, 'secondary', 'index.php', 'fa-chevron-left', 'sm' );
+                        }
+
                         if (! empty( $worklist )  ) {
-                            echo zipButton( TEXT_BUTTON_VIEW_WORKLIST, 'warning', 'view_worklist.php', 'fa-tasks', 'sm', 'worklist_button' );
+
+                            if ( basename($_SERVER['SCRIPT_NAME']) == 'view_worklist.php' ) {
+                                if ( isset($_GET['step']) && (int)$_GET['step'] > 0 ) {
+                                    echo zipButton( TEXT_BUTTON_WORKLIST_RETURN_STEP, 'warning', 'index.php?step=' . (int)$_GET['step'], 'fa-chevron-left', 'sm' );
+                                }
+                            } else {
+                                echo zipButton( TEXT_BUTTON_VIEW_WORKLIST, 'warning', 'view_worklist.php' . ( isset($_GET['step']) ? '?step=' . (int)$_GET['step'] : '' ), 'fa-tasks', 'sm', 'worklist_button' );
+                            }
                         }
 
                         /** @var int $laststep */

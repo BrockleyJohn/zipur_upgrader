@@ -144,7 +144,12 @@
 
                                 $upgrade = loadUpgradeVersion( $next_version );
 
-                                if (! isset($upgrade['settings']['requires']) || empty($upgrade['settings']['requires'])) {
+                                if ( ! $upgrade['exists']) {
+
+                                    zipAlert( sprintf(TEXT_UPGRADE_FROM_NOT_AVAILABLE, $cep_version), 'info');
+
+                                } elseif (! isset($upgrade['settings']['requires']) || empty($upgrade['settings']['requires'])) {
+                                    
                                     zipAlert( TEXT_VERSION_UPGRADE_INFO_INCOMPLETE, 'danger');
 
                                 } else {
