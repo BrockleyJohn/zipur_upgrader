@@ -29,6 +29,7 @@
 
     const TEXT_SUPPORT_LINK = '<a href="%s" target="_blank" class="btn btn-info mt-2"><i class="fas fa-life-ring"></i> Get Help</a>';
 
+    const TEXT_PRO_FEATURE = '%s<small><br>PRO feature. To access GO PRO.</small>';
     const TEXT_EXCEPTION_OCCURRED = 'An uncaught exception occurred: %s';
 
     const TEXT_BACKUP_WARNING = 'MAKE SURE YOU HAVE COMPLETED A RECENT BACKUP OF YOUR DATA AND YOUR FILES BEFORE PROCEEDING.';
@@ -115,7 +116,7 @@
     const TEXT_STEP_07_DESCRIPTION = 'This step will download a full core copy of your current CE Phoenix version and then compare it to your installed version. This will allow the upgrade utility to warn of any core files that will be upgraded that would change your customizations.';
     const TEXT_STEP_08_DESCRIPTION = 'Checking changed core files...';
     const TEXT_STEP_08_WARNING     = 'The following CORE FILES were changed in your current store. This means that some code in these files have changed since they were installed. The upgrade utility will warn you at the next step if these files will be replaced as you upgrade and will save a copy of your edited files. Any extra files that were added to your store that were not in the CORE will also be monitored and you will be warned if they will be adjusted.';
-    const TEXT_STEP_08_CURRENT_TEMPLATE = 'Your store template is currently set to: <strong>%s</strong>. If you have made customizations to your default template files, core language files or module templates, you should copy them to the active template instead.';
+    const TEXT_STEP_08_CURRENT_TEMPLATE = 'Your store template is currently set to: <strong>%s</strong>. If you have changes to your default template files, core language files or module templates, you should copy them to the active template instead or revert them if not needed.';
     const TEXT_STEP_08_NO_ALTERED_FILES = 'No core files were altered from the standard Phoenix Cart distribution. You can proceed with the upgrade without concern for losing store customizations.';
 
     const TEXT_STEP_09_DESCRIPTION      = 'Check configuration table for duplicates. Some old code may have created duplicates in your data. This will check to see if any exist and will allow you to fix prior to upgrading. If you do not resolve duplicates, future versions of CE Phoenix may throw errors as result and your store will not load.';
@@ -171,16 +172,43 @@
     const TEXT_STEP_08_DIFFS_WORKLIST_ENTRY = 'File Worklist Entry';
     const TEXT_STEP_08_DIFFS_WORKLIST_ADD = 'SAVE TO WORKLIST';
     const TEXT_STEP_08_DIFFS_WORKLIST_EDIT = 'EDIT WORKLIST ENTRY';
+    const TEXT_STEP_08_DIFFS_WORKLIST_OVERRIDE = 'MOVE TO TEMPLATE';
+    const TEXT_STEP_08_DIFFS_WORKLIST_REVERT = 'REVERT TO CORE';
     const TEXT_STEP_08_DIFFS_WORKLIST_COMPLETE = 'MARK COMPLETE / IGNORE';
+    const TEXT_STEP_10_DIFFS_WORKLIST_ADD_DEFINITIONS = 'ADD DEFINITIONS';
 
     const TEXT_STEP_10_DIFFS_INSTRUCTIONS = 'Site/override file is shown with deletions from upgrade in red and additions in green.';
+    const TEXT_STEP_10_ADDITIONAL_DEFINITIONS = 'Additional Definitions';
+    const TEXT_STEP_10_ADDITIONAL_DEFINITIONS_FOR_VERSION_START   = 'Additional Definitions For %s - START';
+    const TEXT_STEP_10_ADDITIONAL_DEFINITIONS_FOR_VERSION_END     = 'Additional Definitions For %s - END';
+    const TEXT_FAILED_TO_ADD_DEFINITIONS = 'Failed to add definitions to site file';
+    const TEXT_NO_ADDITIONAL_DEFINITIONS = 'No additional definitions found in core file';
 
     const TEXT_STEP_11_DESCRIPTION = 'Below is the output from your upgrade to ';
 
-    const TEXT_CORE_CHANGE_OVERRIDDEN = 'OVERRIDDEN BY<br>%s';
-    const TEXT_CORE_CHANGE_SHOULD_OVERRIDE = 'COPY TO TEMPLATE';
+    const TEXT_AUTO_PREFIX = '[AUTO] ';
+    const TEXT_REVERTED_TO_CORE = 'Reverted to core version';
+    const TEXT_SITE_FILE_BACKED_UP = 'Site file backed up successfully';
+    const TEXT_REVERT_TO_CORE_FAILED = 'Failed to revert site file to core version';
 
-    const TEXT_WORK_ITEM = 'WORK ITEM';
+    const TEXT_CORE_CHANGE_OVERRIDDEN = 'OVERRIDDEN BY<br>%s';
+    const TEXT_CORE_CHANGE_SHOULD_OVERRIDE = 'MOVE TO TEMPLATE';
+    const TEXT_WORKLIST_TO_TEMPLATE = 'Move Changes to Template';
+    const TEXT_FILE_EXISTS_IN_TEMPLATE = 'File of this name already present in template.';
+    const TEXT_FILE_NOT_EXISTS_IN_TEMPLATE = 'File not already in template.';
+    const TEXT_TEMPLATE_FILE_DIFFERS = 'Catalog and template files are different.';
+    const TEXT_TEMPLATE_FILE_SAME = 'Catalog and template files are the same.';
+    const TEXT_TEMPLATE_RECOMMENDED_ACTION = 'Recommendation: ';
+    const TEXT_MOVE_CHANGES_TO_TEMPLATE = 'Copy changed catalog file to template and restore core version to catalog (to avoid flagging again).';
+    const TEXT_OVERWRITE_CATALOG_FILE_BACKUP = 'Catalog file is overridden by template. Keep a backup copy and restore core version to catalog (to avoid flagging again).';
+    const TEXT_OVERWRITE_CATALOG_FILE = 'Restore core version to catalog (to avoid flagging again).';
+    const TEXT_TEMPLATE_LOCATION_NOT_FOUND = 'Could not determine template location for %s';
+    const TEXT_TEMPLATE_FILE_ALREADY_EXISTS = 'Template file already exists: %s';
+    const TEXT_TEMPLATE_FILE_CREATE_FAILED = 'Failed to create template file: %s';
+    const TEXT_TEMPLATE_REVERT_TO_CORE_FAILED = 'Failed to revert core changes to %s after copying to template';
+    const TEXT_TEMPLATE_FILE_MOVE_COMPLETE = 'Successfully moved changes to template: %s';
+
+    const TEXT_GO_PRO_COLOUR = 'light';
     // worklist styles
     const TEXT_WORKLIST_DONE_COLOUR = 'success';
     const TEXT_WORKLIST_NEW_COLOUR = 'danger';
@@ -190,10 +218,14 @@
     const TEXT_WORKLIST_NEW_ICON = 'plus-square';
     const TEXT_WORKLIST_EXPECTED_ICON = 'info-circle';
     const TEXT_WORKLIST_TO_DO_ICON = 'hourglass-half';
+    const TEXT_WORKLIST_TO_TEMPLATE_ICON = 'sitemap';
+    
     define('TEXT_WORKLIST_DONE', 'fas fa-' . TEXT_WORKLIST_DONE_ICON . ' text-' . TEXT_WORKLIST_DONE_COLOUR);
     define('TEXT_WORKLIST_NEW', 'fas fa-' . TEXT_WORKLIST_NEW_ICON . ' text-' . TEXT_WORKLIST_NEW_COLOUR);
     define('TEXT_WORKLIST_EXPECTED', 'fas fa-' . TEXT_WORKLIST_EXPECTED_ICON . ' text-' . TEXT_WORKLIST_EXPECTED_COLOUR);
     define('TEXT_WORKLIST_TO_DO', 'fas fa-' . TEXT_WORKLIST_TO_DO_ICON . ' text-' . TEXT_WORKLIST_TO_DO_COLOUR);
+    const TEXT_WORK_ITEM = 'WORK ITEM';
+    const TEXT_WORK_ITEM_TO_TEMPLATE = 'MOVE CHANGES TO TEMPLATE';
 
     const TEXT_WORKLIST_EMPTY = 'Your worklist is currently empty. When you review the comparison of your diffs of your changed files, you can add items to your worklist to keep notes of the customisations you have made, any actions you need to take now or for a later update, and any progress.';
     const TEXT_UPGRADE_NO_DIFF = 'UPGRADE = SITE';

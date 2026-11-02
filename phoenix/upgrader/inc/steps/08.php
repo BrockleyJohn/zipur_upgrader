@@ -114,6 +114,9 @@
                         foreach ( $zip_altered_files as $zip_added_file ) {
 
                           switch (true) {
+                            case ($zip_added_file === DIRECTORY_SEPARATOR . '.htaccess'):
+                            case ($zip_added_file === $admin_path . DIRECTORY_SEPARATOR . '.htaccess'):
+                            case ($zip_added_file === $admin_path . DIRECTORY_SEPARATOR . '.htpasswd_phoenix'):
                             case ($zip_added_file === DIRECTORY_SEPARATOR . 'includes' . DIRECTORY_SEPARATOR . 'configure.php'):
                             case ($zip_added_file === $admin_path . DIRECTORY_SEPARATOR . 'includes' . DIRECTORY_SEPARATOR . 'configure.php'):
                               $worklist_style = TEXT_WORKLIST_EXPECTED;
@@ -133,11 +136,11 @@
                           $overrides = '';
                           if ($override_file = coreFileIsOverridden($zip_added_file)) {
                               $overrides = ' <span class="badge badge-info">' . sprintf(TEXT_CORE_CHANGE_OVERRIDDEN, $override_file) . '</span>';
-                          } elseif (coreChangeShouldOverride($zip_added_file)) {
+                          } elseif ($should_override = coreChangeShouldOverride($zip_added_file)) {
                               $overrides = ' <span class="badge badge-warning">' . TEXT_CORE_CHANGE_SHOULD_OVERRIDE . '</span>';
                           }
 
-                          echo '<li class="list-group-item align-items-center justify-content-between d-flex py-1">' . htmlspecialchars($zip_added_file, ENT_QUOTES, 'UTF-8') . $overrides . ' <span>' . zipButton(TEXT_BUTTON_DIFFS, 'secondary btn-diff', '#', 'fa-compress-alt', 'md', 'diffs' . $b, ['filename' => $zip_added_file, 'corepath' => $extracted_folder, 'corefile' => $zip_added_file, 'index' => $b]) . ' <i id="worklist_' . $b . '" class="' . $worklist_style . '"></i></span></li>';
+                          echo '<li class="list-group-item align-items-center justify-content-between d-flex py-1">' . htmlspecialchars($zip_added_file, ENT_QUOTES, 'UTF-8') . $overrides . ' <span>' . zipButton(TEXT_BUTTON_DIFFS, 'secondary btn-diff', '#', 'fa-compress-alt', 'md', 'diffs' . $b, ['filename' => $zip_added_file, 'corepath' => $extracted_folder, 'corefile' => $zip_added_file, 'should_override' => (($should_override ?? false) ? 1 : 0), 'index' => $b]) . ' <i id="worklist_' . $b . '" class="' . $worklist_style . '"></i></span></li>';
                           $b++;
 
                         }

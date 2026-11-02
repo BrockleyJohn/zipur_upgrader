@@ -2,8 +2,9 @@
 
     /*
 
- Version: 2.1.1
+ Version: 2.1.2
  Name: Zipur CE Phoenix Upgrade Utility
+ v2.1.2 2026-11-01 extract additional definitions for step 10
  v2.1.1 2026-10-22 add diffs to step 10, worklist to step 11, template checking language files
 
  Extended by: John Ferguson @BrockleyJohn phoenix@cartmart.uk
@@ -173,20 +174,24 @@
                         }
                     } */
                     if ( empty($next_version) || ! is_dir( __DIR__ . '/versions/' . $next_version ) ) {
-                        list($next_version, $available_updates) = cartmartCheckVersion($cep_version);
-                        // catch current version not found at cartmart (too old)
-                        if ( 'not_found' === $next_version ) {
+                        try {
+                            list($next_version, $available_updates) = cartmartCheckVersion($cep_version);
+                            if ( 'not_found' === $next_version ) {
+                                $next_version = $cep_version; // fallback to current version
+                            } else {
+                                if (! is_dir( __DIR__ . '/versions/' . $next_version ) ) {
+                                    mkdir( __DIR__ . '/versions/' . $next_version, 0755 );
+                                } 
+                                //error_log('Cartmart check result: next_version=' . $next_version . ' available_updates=' . print_r($available_updates, true));
+                                foreach ($available_updates as $update) {
+                                    if (! is_dir( __DIR__ . '/versions/' . $update['version'] ) ) {
+                                        mkdir( __DIR__ . '/versions/' . $update['version'], 0755 );
+                                    }
+                                } 
+                            }
+                        } catch (Exception $e) {
+                            // failed to connect to Cartmart to check for updates
                             $next_version = $cep_version; // fallback to current version
-                        } else {
-                            if (! is_dir( __DIR__ . '/versions/' . $next_version ) ) {
-                                mkdir( __DIR__ . '/versions/' . $next_version, 0755 );
-                            } 
-                            //error_log('Cartmart check result: next_version=' . $next_version . ' available_updates=' . print_r($available_updates, true));
-                            foreach ($available_updates as $update) {
-                                if (! is_dir( __DIR__ . '/versions/' . $update['version'] ) ) {
-                                    mkdir( __DIR__ . '/versions/' . $update['version'], 0755 );
-                                }
-                            } 
                         }
                     }
                 }

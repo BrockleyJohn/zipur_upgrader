@@ -92,7 +92,7 @@
                         }
                     }
 
-                    if ( ! empty( $passed_dupe_check ) ) {
+                    if ( 1 === $passed_dupe_check  ) {
                         zipAlert(TEXT_STEP_09_NO_DUPLICATES, 'success');
                         $save_changes        = 1;
                         $config['limitstep'] = ( $config['limitstep'] < 9 ) ? 9 : $config['limitstep'];

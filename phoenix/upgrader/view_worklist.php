@@ -29,10 +29,14 @@
           echo '<p class="card-text">' . nl2br(htmlspecialchars($item['entry'])) . '</p>';
           $params = [ 'file' => $filename, 'index' => $b ];
           $workid = 'workitem_' . $b;
+          $worklist_item = '';
           if ( $item['status'] == 'complete' ) {
-              $worklist_item = zipButton( TEXT_WORK_ITEM, TEXT_WORKLIST_DONE_COLOUR . ' worklink', '#', 'fa-' . TEXT_WORKLIST_DONE_ICON, 'sm', $workid, $params );
+              $worklist_item .= zipButton( TEXT_WORK_ITEM, TEXT_WORKLIST_DONE_COLOUR . ' worklink', '#', 'fa-' . TEXT_WORKLIST_DONE_ICON, 'sm', $workid, $params );
           } else {
-              $worklist_item = zipButton( TEXT_WORK_ITEM, TEXT_WORKLIST_TO_DO_COLOUR . ' worklink', '#', 'fa-' . TEXT_WORKLIST_TO_DO_ICON, 'sm', $workid, $params );
+            if (strpos($filename, '/includes/languages/') === 0) {
+                $worklist_item .= proButton( TEXT_WORK_ITEM_TO_TEMPLATE, TEXT_WORKLIST_TO_TEMPLATE_COLOUR . ' totemplate', '#', 'fa-' . TEXT_WORKLIST_TO_TEMPLATE_ICON, 'sm', $workid, $params );
+            }
+              $worklist_item .= zipButton( TEXT_WORK_ITEM, TEXT_WORKLIST_TO_DO_COLOUR . ' worklink', '#', 'fa-' . TEXT_WORKLIST_TO_DO_ICON, 'sm', $workid, $params );
           }
           echo '<p class="card-text w-100 text-right">' . $worklist_item . '</p>';
           echo '</div>';
@@ -42,11 +46,12 @@
 
         worklistPopup();
 
+        totemplatePopup();
+
       } else {
 
         echo '<div class="alert alert-info">' . TEXT_WORKLIST_EMPTY . '</div>';
       }
-
 
       require 'inc/footer.php';
   } catch (Exception $e) {

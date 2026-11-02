@@ -1,6 +1,5 @@
 <?php
-
-    /*
+/*
 
  Name: Zipur CE Phoenix Upgrade Utility
 
@@ -22,6 +21,48 @@
   THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
+
+@include_once(__DIR__ . DIRECTORY_SEPARATOR . 'pro_functions.php');
+
+const GO_PRO_LINK = 'https://cartmart.uk/contact_us.php?subject=I%20want%20to%20GO%20PRO%20with%20the%20Upgrader%20Utility&enquiry=Please%20provide%20details%20on%20how%20I%20can%20upgrade%20to%20the%20Pro%20version.%0A%0AThank%20you!';
+
+if (! function_exists('proButton')) {
+    function proButton($text, $class = 'info', $link = '', $icon = '', $size = 'lg', $id = '', $params = []) {
+        static $i = 0;
+        $i++;
+        return zipButton(sprintf(TEXT_PRO_FEATURE, $text), TEXT_GO_PRO_COLOUR, GO_PRO_LINK, $icon, $size, 'gopro' . $i, ['newwindow' => true]);
+    }
+}
+
+if (! function_exists('totemplatePopup')) {
+    function totemplatePopup() {
+        return;
+    }
+}
+
+    /**
+     * @param string $from The source file path
+     * @param string $to The destination file path
+     */
+    function copyFileCheck($from, $to) {
+        if (!file_exists($from)) {
+            return false;
+        }
+        if (! is_dir(dirname($to))) {
+            mkdir(dirname($to), 0755, true);
+        }
+        if (!copy($from, $to)) {
+            return false;
+        }
+        if (!file_exists($to)) {
+            return false;
+        }
+        if (md5_file($from) !== md5_file($to)) {
+            return false;
+        }
+        return true;
+    }
+
 
     /**
      * @param        $var_to_check
@@ -120,6 +161,9 @@
     function zipButton( $text, $class, $link, $icon = '', $size = 'lg', $id = '', $params = [] ) {
 
         $buttoncode = '';
+        if (! empty( $size)) {
+            $size = 'btn-' . $size;
+        }
 
         $extrahtml = '';
         if ( ! empty( $id ) ) {
@@ -132,13 +176,13 @@
         }
 
         if ( $link == 'submit' ) {
-            $buttoncode .= '<button class="p-1 pr-4 mr-3 btn btn-' . $size . ' btn-' . $class . '" ' . $extrahtml . '>';
+            $buttoncode .= '<button class="p-1 pr-4 mr-3 btn ' . $size . ' btn-' . $class . '" ' . $extrahtml . '>';
             if ( ! empty( $icon ) ) {
                 $buttoncode .= '<i class="pr-2 pl-2 mr-1 fas ' . $icon . '"></i> ';
             }
             $buttoncode .= $text . '</button>';
         } else {
-            $buttoncode .= '<a ' . $extrahtml . ' class="m-2 mr-4 pr-4 pl-2 btn btn-' . $size . ' btn-' . $class;
+            $buttoncode .= '<a ' . $extrahtml . ' class="m-2 mr-4 pr-4 pl-2 btn ' . $size . ' btn-' . $class;
             $buttoncode .= '" href="' . htmlspecialchars((string) $link, ENT_QUOTES, 'UTF-8') . '"';
             $buttoncode .= '>';
             if ( ! empty( $icon ) ) {
@@ -644,6 +688,63 @@
         }
     }
 
+    function compareLanguageFiles($sitefile, $corefile, $corepath) {
+        $original_defs = [];
+        $overridden_defs = [];
+        $sitefile = ltrim($sitefile, '/\\');
+        $sitefile = $GLOBALS['config']['cep_files']['root'] . DIRECTORY_SEPARATOR . $sitefile;
+        $corefile = ltrim($corefile, '/\\');
+        $corefile = $corepath . DIRECTORY_SEPARATOR . $corefile;
+        //error_log("Comparing language files: sitefile = $sitefile,\n corefile = $corefile");
+
+        if (file_exists($sitefile)) {
+            $lines = file($sitefile);
+            foreach ($lines as $line) {
+                // check for define statements
+                if (preg_match('/define\s*\(\s*[\'"](.+?)[\'"]\s*,\s*[\'"](.+?)[\'"]\s*\)\s*;/', $line, $matches)) {
+                    // skip if commented out
+                    if (! preg_match('/^\s*\/\//', $line)) {
+                        $original_defs[$matches[1]] = $matches[2];
+                    }
+                }
+                // check for const declarations
+                if (preg_match('/const\s+(.+?)\s*=\s*[\'"](.+?)[\'"]\s*;/', $line, $matches)) {
+                    // skip if commented out
+                    if (! preg_match('/^\s*\/\//', $line)) {
+                        $original_defs[$matches[1]] = $matches[2];
+                    }
+                }
+            }
+        } else {
+            error_log("Site file does not exist: $sitefile");
+        }
+
+        if (file_exists($corefile)) {
+            $lines = file($corefile);
+            foreach ($lines as $line) {
+                if (preg_match('/define\s*\(\s*[\'"](.+?)[\'"]\s*,\s*[\'"](.+?)[\'"]\s*\)\s*;/', $line, $matches)) {
+                    // skip if commented out
+                    if (! preg_match('/^\s*\/\//', $line)) {
+                        $overridden_defs[$matches[1]] = $matches[2];
+                    }
+                }
+                if (preg_match('/const\s+(.+?)\s*=\s*[\'"](.+?)[\'"]\s*;/', $line, $matches)) {
+                    // skip if commented out
+                    if (! preg_match('/^\s*\/\//', $line)) {
+                        $overridden_defs[$matches[1]] = $matches[2];
+                    }
+                }
+            }
+        } else {
+            error_log("Core file does not exist: $corefile");
+        }
+        //error_log("Original definitions: " . print_r($original_defs, true));
+        //error_log("Overridden definitions: " . print_r($overridden_defs, true));
+
+        $added = array_diff_key($overridden_defs, $original_defs);
+        return $added;
+    }
+
     /**
      * @param $filename
      * 
@@ -682,7 +783,7 @@
             }
 
             $mappedname = language::map_to_translation($mapname, $language);
-            error_log("Checking if language file is overridden: \n{$fullcorename} maps to \n{$mappedname}\nusing language {$language} and mapname {$mapname}\n" . ($mappedname !== $fullcorename ? 'OVERRIDDEN' : 'NOT OVERRIDDEN'));
+            //error_log("Checking if language file is overridden: \n{$fullcorename} maps to \n{$mappedname}\nusing language {$language} and mapname {$mapname}\n" . ($mappedname !== $fullcorename ? 'OVERRIDDEN' : 'NOT OVERRIDDEN'));
             $shortmapped = str_replace( $GLOBALS['config']['cep_files']['root'], '', $mappedname );
 
             return ($mappedname !== $fullcorename ? $shortmapped : false);
@@ -710,6 +811,9 @@
         // load template to check for overridden files
         define('BOOTSTRAP_CONTENT', mysqli_fetch_assoc( mysqli_query( $db, "SELECT `configuration_value` FROM `configuration` WHERE `configuration_key` = 'BOOTSTRAP_CONTENT'" ) )['configuration_value']);
         $GLOBALS['Template'] = new Template($set_template);
+        // load upgrader class index
+        require dirname(__DIR__) . '/classes/upgrader_class_index.php';
+        $GLOBALS['upgrader_class_index'] = new upgrader_class_index($GLOBALS['class_index']);
 
         return $set_template;
     }
@@ -1029,7 +1133,7 @@
 
                             } else {
 
-                                $diff_button = zipButton( TEXT_BUTTON_DIFFS, 'secondary btn-sm btn-diff', '#', 'fa-compress-alt', 'md', 'diff_' . $b, ['filename' => ( $override_file ? $override_file : $upgrade_file_short ), 'corepath' => 'inc' . $ds . 'versions' . $ds . $next_version . $ds . 'files', 'corefile' => $upgrade_file_short, 'index' => $b] );
+                                $diff_button = zipButton( TEXT_BUTTON_DIFFS, 'secondary btn-sm btn-diff', '#', 'fa-compress-alt', 'md', 'diff_' . $b, ['filename' => ( $override_file ? $override_file : $upgrade_file_short ), 'corepath' => 'inc' . $ds . 'versions' . $ds . $next_version . $ds . 'files', 'corefile' => $upgrade_file_short, 'index' => $b, 'is_overridden' => $override_file ? '1' : '0'] );
 
                                 $worklist_style = TEXT_WORKLIST_NEW;
                                 $workfile = $override_file ? $override_file : $upgrade_file_short;
@@ -1331,6 +1435,7 @@ let oldCode = '', newCode = '';
             </div>
           </form>
         </div>
+        <div id="diffMessages" class="mt-3"></div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-dismiss="modal"><?= TEXT_CLOSE ?></button>
@@ -1548,14 +1653,18 @@ var mergeHTMLPlugin = (function () {
             const filename = this.getAttribute('data-filename');
             const corepath = this.getAttribute('data-corepath');
             const corefile = this.getAttribute('data-corefile');
+            const should_override = this.getAttribute('data-should_override');
+            const is_overridden = this.getAttribute('data-is_overridden');
+            const step = '<?= $step ?>';
             const index = this.getAttribute('data-index');
             // check for existing worklist entry for this file
             fetch(`worklist.php`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
+                    'Accept': 'application/json',
                 },
-                body: `action=load&file=${encodeURIComponent(filename)}&corefile=${encodeURIComponent(corefile)}&index=${encodeURIComponent(index)}&csrf_token=${encodeURIComponent(window.zipurCsrfToken)}`,
+                body: `action=load&file=${encodeURIComponent(filename)}&corepath=${encodeURIComponent(corepath)}&corefile=${encodeURIComponent(corefile)}&should_override=${encodeURIComponent(should_override)}&index=${encodeURIComponent(index)}&is_overridden=${encodeURIComponent(is_overridden)}&step=${encodeURIComponent(step)}&csrf_token=${encodeURIComponent(window.zipurCsrfToken)}`,
             })
                 .then(response => response.json())
                 .then(data => {
@@ -1573,6 +1682,15 @@ var mergeHTMLPlugin = (function () {
                             statusBadge.className = '';
                         }
                     }
+                    if (data.diffMessages) {
+                        const diffMessagesDiv = document.getElementById('diffMessages');
+                        diffMessagesDiv.innerHTML = '<strong><?= TEXT_STEP_10_ADDITIONAL_DEFINITIONS ?></strong><br>';
+                        for (const [key, value] of Object.entries(data.diffMessages)) {
+                            const message = document.createElement('div');
+                            message.textContent = `${key}: ${value}`;
+                            diffMessagesDiv.appendChild(message);
+                        }
+                    }
                 })
                 .catch(error => {
                     console.error('Error loading worklist entry:', error);
@@ -1584,6 +1702,7 @@ var mergeHTMLPlugin = (function () {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
+                    'Accept': 'application/json',
                 },
                 body: `file=${encodeURIComponent(filename)}&corepath=${encodeURIComponent(corepath)}&corefile=${encodeURIComponent(corefile)}&csrf_token=${encodeURIComponent(window.zipurCsrfToken)}`,
             })
@@ -1617,7 +1736,8 @@ var mergeHTMLPlugin = (function () {
           fetch(`worklist.php`, {
               method: 'POST',
               headers: {
-                  'Content-Type': 'application/x-www-form-urlencoded',
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Accept': 'application/json',
               },
               body: `action=${encodeURIComponent(action)}&file=${encodeURIComponent(filename)}&index=${encodeURIComponent(index)}&worklist_entry=${encodeURIComponent(document.getElementById('worklist_entry').value)}&csrf_token=${encodeURIComponent(window.zipurCsrfToken)}`,
           })                
@@ -1646,7 +1766,47 @@ var mergeHTMLPlugin = (function () {
                   // add some error feedback
                   alert('Error updating worklist entry: ' + error);
               });
-      }
+      } 
+      if (e.target && e.target.matches('.changefiles')) {
+          const action = e.target.getAttribute('data-action');
+          const filename = e.target.getAttribute('data-file');
+        const corepath = e.target.getAttribute('data-corepath');
+        const corefile = e.target.getAttribute('data-corefile');
+          const index = e.target.getAttribute('data-index');
+          // handle the action (template/revert) for the worklist entry
+          fetch('sitefile.php', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/x-www-form-urlencoded',
+              },
+              body: `action=${encodeURIComponent(action)}&file=${encodeURIComponent(filename)}&corepath=${encodeURIComponent(corepath)}&corefile=${encodeURIComponent(corefile)}&index=${encodeURIComponent(index)}&worklist_entry=${encodeURIComponent(document.getElementById('worklist_entry').value)}&csrf_token=${encodeURIComponent(window.zipurCsrfToken)}`,
+          })                
+        .then(response => response.json())
+        .then(data => {
+        // add some positive feedback
+        if (data.success) {
+            //alert('Worklist updated successfully');
+            diffModal.hide();
+            if (data.entrystatus) {
+                const statusBadge = document.getElementById(`worklist_${index}`);
+                if (data.entrystatus === 'complete') {
+                    statusBadge.className = '<?= TEXT_WORKLIST_DONE ?>';
+                } else if (data.entrystatus === 'todo') {
+                    statusBadge.className = '<?= TEXT_WORKLIST_TO_DO ?>';
+                } else {
+                    statusBadge.className = '';
+                }
+            }
+        } else if (data.error) {
+            alert('Error: ' + data.error);
+        }
+        })
+        .catch(error => {
+            console.error('Error updating worklist entry:', error);
+            // add some error feedback
+            alert('Error updating worklist entry: ' + error);
+        });
+    } 
 
     });
     worklistForm.addEventListener('submit', function(e) {
@@ -1756,6 +1916,7 @@ function diff_prettyLines(diff) {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
+                    'Accept': 'application/json',
                 },
                 body: `action=load&file=${encodeURIComponent(filename)}&index=${encodeURIComponent(index)}&csrf_token=${encodeURIComponent(window.zipurCsrfToken)}`,
             })
@@ -1797,6 +1958,7 @@ function diff_prettyLines(diff) {
               method: 'POST',
               headers: {
                   'Content-Type': 'application/x-www-form-urlencoded',
+                  'Accept': 'application/json',
               },
               body: `action=${encodeURIComponent(action)}&file=${encodeURIComponent(filename)}&index=${encodeURIComponent(index)}&worklist_entry=${encodeURIComponent(document.getElementById('worklist_entry').value)}&csrf_token=${encodeURIComponent(window.zipurCsrfToken)}`,
           })                
