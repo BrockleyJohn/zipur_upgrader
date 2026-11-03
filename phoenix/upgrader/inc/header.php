@@ -4,7 +4,7 @@
 
  Version: 2.1.2
  Name: Zipur CE Phoenix Upgrade Utility
- v2.1.2 2026-11-01 extract additional definitions for step 10
+ v2.1.2 2026-11-01 extract additional definitions for step 10, support module template overrides
  v2.1.1 2026-10-22 add diffs to step 10, worklist to step 11, template checking language files
 
  Extended by: John Ferguson @BrockleyJohn phoenix@cartmart.uk
@@ -261,7 +261,7 @@
             <!--div class="col" style="text-align: left; padding: 0px 40px; margin-bottom: 10px;">
             </div-->
             <div class="col" style="text-align: right; padding: 0px 40px; margin-bottom: 10px;">
-                Maintained &amp; extended by @BrockleyJohn (<a href="https://cartmart.uk" target="_blank">Cartmart.uk</a>) - Created by @zipurman (<a href="https://PhoenixAddons.com" target="_blank">PhoenixAddons.com</a>)
+                Maintained &amp; extended by @BrockleyJohn (<a href="https://cartmart.uk" target="_blank">Cartmart.uk</a>) - Created by @zipurman
             </div>
         </div>
         <div class="bg-dark text-light p-4 m-0 mw-100 rounded">

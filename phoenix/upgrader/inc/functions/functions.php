@@ -758,6 +758,11 @@ if (! function_exists('totemplatePopup')) {
             return true;
         }
 
+        // module template files
+        if (strpos($filename, DIRECTORY_SEPARATOR . 'includes' . DIRECTORY_SEPARATOR . 'modules' . DIRECTORY_SEPARATOR) === 0 && strpos(basename($filename), 'tpl_') === 0) {
+            return true;
+        }
+
         return false;
     }
 
@@ -789,7 +794,13 @@ if (! function_exists('totemplatePopup')) {
             return ($mappedname !== $fullcorename ? $shortmapped : false);
         }
 
-        // check for template files
+        // check for module template files
+        if (strpos($filename, DIRECTORY_SEPARATOR . 'includes' . DIRECTORY_SEPARATOR . 'modules' . DIRECTORY_SEPARATOR) === 0 && strpos(basename($filename), 'tpl_') === 0) {
+            // need to be in the right place so check it
+            if (($override_location = overrideLocation($filename)) && file_exists($override_location)) {
+                return str_replace( $GLOBALS['config']['cep_files']['root'], '', $override_location );
+            }
+        }
 
         // check for components
 
@@ -799,6 +810,45 @@ if (! function_exists('totemplatePopup')) {
 
         return false;
     }
+
+  function overrideLocation($filename) {
+    // determine the full path to the template location for a given site file
+    $ds = DIRECTORY_SEPARATOR;
+
+    if (! isset($GLOBALS['set_template'])) {
+      $GLOBALS['set_template'] = templateInitialise();
+    }
+    $template_class = strtolower($GLOBALS['set_template']) . '_template';
+    //error_log('Using template: ' . $GLOBALS['set_template'] . ' (' . $template_class . ')');
+
+    $type = '';
+
+    // check for language files
+    if (strpos($filename, $ds . 'includes' . $ds . 'languages' . $ds) === 0) {
+      $type = 'translation';
+    }
+
+    // check for module template files
+    if (strpos($filename, DIRECTORY_SEPARATOR . 'includes' . DIRECTORY_SEPARATOR . 'modules' . DIRECTORY_SEPARATOR) === 0 && strpos(basename($filename), 'tpl_') === 0) {
+      $type = 'module';
+      // need to pass the module file to template
+      $filename = dirname($filename, 2) . DIRECTORY_SEPARATOR . str_replace('tpl_', '', basename($filename));
+    }
+
+    // check for components
+
+    // check for pages
+
+    // check for classes
+
+    if (! empty($type)) {
+        return $template_class::_get_template_mapping_for($filename, $type);
+    }
+
+    return false;
+
+  }
+
 
     function templateInitialise() {
         global $db;
@@ -954,8 +1004,10 @@ if (! function_exists('totemplatePopup')) {
             }
 
             zipAlert( TEXT_NOT_SAFE_LEGEND);
-            $set_template = templateInitialise();
-            zipAlert( sprintf(TEXT_STEP_10_CURRENT_TEMPLATE, $set_template), 'info' );
+            if (! isset($GLOBALS['set_template'])) {
+                $GLOBALS['set_template'] = templateInitialise();
+            }
+            zipAlert( sprintf(TEXT_STEP_10_CURRENT_TEMPLATE, $GLOBALS['set_template']), 'info' );
 
             zipAlert( TEXT_SAFE_LEGEND, 'success');
 
