@@ -49,7 +49,11 @@
         if ($should_override) {
           $return['buttons'] .=  ' ' . proButton( TEXT_STEP_08_DIFFS_WORKLIST_OVERRIDE, 'warning changefiles', 'submit', 'fa-hand-point-right', '', 'moveToTemplate', ['file' => $filename, 'corepath' => $corepath, 'corefile' => $corefile, 'action' => 'movetemplate', 'index' => $index] );
         }
-        $return['buttons'] .=  ' ' . proButton( TEXT_STEP_08_DIFFS_WORKLIST_REVERT, 'warning changefiles', 'submit', 'fa-history', '', 'revertToCore', ['file' => $filename, 'corepath' => $corepath, 'corefile' => $corefile, 'action' => 'revert', 'index' => $index] );
+        if (! empty($corepath) && ! empty($corefile)) {
+          $return['buttons'] .=  ' ' . proButton( TEXT_STEP_08_DIFFS_WORKLIST_REVERT, 'warning changefiles', 'submit', 'fa-history', '', 'revertToCore', ['file' => $filename, 'corepath' => $corepath, 'corefile' => $corefile, 'action' => 'revert', 'index' => $index] );
+        } else {
+          $return['buttons'] .= ' <div class="p-1 pr-4 mr-3 btn btn-secondary disabled"><i class="pr-2 pl-2 mr-1 fas fa-random"></i>' . TEXT_WORKLIST_COMPARISON_UNAVAILABLE . '</div>';
+        }
         $return['buttons'] .=  ' ' . zipButton( TEXT_STEP_08_DIFFS_WORKLIST_COMPLETE, 'success listentry', 'submit', 'fa-check', '', 'completeWorklistEntry', ['file' => $filename, 'action' => 'complete', 'index' => $index] );
         if ($step == '10' && $is_overridden) {
           //error_log("Step 10 and file is overridden: $filename");

@@ -11,9 +11,9 @@
   require_once 'inc/functions/functions.php';
   zipurSessionStart();
   if (!zipurIsAuthenticated()) {
-      http_response_code(403);
-      exit('Unauthorized');
-  }
+    header('Location: index.php?step=999');
+    exit;
+  } 
 
   try {
       require 'inc/header.php';
@@ -22,13 +22,32 @@
 
         $b = 0;
 
+        if ( $config['limitstep'] >= 7 ) {
+          // core version has been downloaded so can be used
+          // corepath should be only folder in clean_core
+          $corepath = '';
+          $files = scandir('inc/clean_core/');
+          foreach ($files as $file) {
+            if (is_dir('inc/clean_core/' . $file) && strpos($file, 'CE-Phoenix') === 0) {
+              $corepath = realpath('inc/clean_core/' . $file);
+              break;
+            }
+          }
+
+        }
+
         foreach ($worklist as $filename => $item) {
           echo '<div class="card mb-3">';
           echo '<div class="card-body">';
           echo '<h5 class="card-title">' . htmlspecialchars($filename) . '</h5>';
           echo '<p class="card-text">' . nl2br(htmlspecialchars($item['entry'])) . '</p>';
           $params = [ 'file' => $filename, 'index' => $b ];
-          $workid = 'workitem_' . $b;
+          if ( $config['limitstep'] >= 7) {
+            // core version has been downloaded so can be used
+            $params['corepath'] = $corepath;
+            $params['corefile'] = basename($filename);
+          }
+          $workid = 'worklistitem_' . $b;
           $worklist_item = '';
           if ( $item['status'] == 'complete' ) {
               $worklist_item .= zipButton( TEXT_WORK_ITEM, TEXT_WORKLIST_DONE_COLOUR . ' worklink', '#', 'fa-' . TEXT_WORKLIST_DONE_ICON, 'sm', $workid, $params );

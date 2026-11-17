@@ -299,21 +299,46 @@
                 // ensure the tool has been properly secured
                 if (empty($config['security']) || $config['security'] !== 'secure') {
 
-                    $test_url = ( isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http" ) . "://{$_SERVER['HTTP_HOST']}" . htmlspecialchars(dirname($_SERVER['REQUEST_URI'])) . "/inc/security.json";
-                    $context = stream_context_create(['http' => ['ignore_errors' => true, 'timeout' => 3]]);
-                    //error_log("Testing security URL: " . $test_url);
-                    $security_response = @file_get_contents($test_url, false, $context);
-                    // $http_response_header is automatically populated by file_get_contents in the local scope
-                    $statusCode = 0;
-                    //error_log("HTTP response header: " . print_r($http_response_header, true));
-                    if (isset($http_response_header) && isset($http_response_header[0])) {
-                        // Extract the numeric status code (e.g., "HTTP/1.1 200 OK" -> 200)
-                        if (preg_match('{HTTP\/\S+\s+(\d+)}', $http_response_header[0], $matches)) {
-                            $statusCode = (int)$matches[1];
+                    // check file and folder permissions on the whole addon if on unix-like system
+                    if (strtoupper(substr(PHP_OS, 0, 3)) !== 'WIN') {
+                        // recursively check permissions for files and directories within the addon
+                        $addon_dir = __DIR__ . '/../';
+                        $iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($addon_dir));
+                        foreach ($iterator as $file) {
+                            if ($file->isDir()) {
+                                $perms = $file->getPerms() & 0777;
+                                $forbidden_bits = 0022; // world-writable bits
+                                if (($perms & $forbidden_bits) !== 0) {
+                                    // fix the permission
+                                    chmod($file->getPathname(), 0755);
+                                    zipAlert(sprintf(TEXT_FIXED_INSECURE_PERMISSION, $file->getPathname()));
+                                }
+                            }
+                            if ($file->isFile()) {
+                                $perms = $file->getPerms() & 0777;
+                                $forbidden_bits = 0022 | 0111; // world-writable or executable bits
+                                if (($perms & $forbidden_bits) !== 0) {
+                                    // fix the permission
+                                    chmod($file->getPathname(), 0644);
+                                    zipAlert(sprintf(TEXT_FIXED_INSECURE_PERMISSION, $file->getPathname()));
+                                }
+                            }
                         }
-                    }
-                    //error_log("HTTP status code: " . $statusCode);
-                    //error_log("Security response: " . $security_response);
+                    } // end of unix-like system check
+
+                    $test_url = ( isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http" ) . "://{$_SERVER['HTTP_HOST']}" . htmlspecialchars(dirname($_SERVER['REQUEST_URI'])) . "/inc/security.json";
+                    //error_log("Testing security URL: " . $test_url);
+                    
+                    $ch = curl_init($test_url);
+                    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                    curl_setopt($ch, CURLOPT_TIMEOUT, 3);
+                    curl_setopt($ch, CURLOPT_FAILONERROR, false);
+                    $security_response = @curl_exec($ch);
+                    $statusCode = (int)curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                    @curl_close($ch);
+                    
+                    error_log("Security check HTTP status code: " . $statusCode);
+                    error_log("Security response: " . $security_response);
 
                     // Evaluate security status based on the HTTP Code
                     if ($statusCode === 200) {
@@ -354,9 +379,13 @@
                             } elseif (stripos($serverSoftware, 'apache') !== false) {
                                 $webserver = 'apache';
                             }
-                            zipAlert(sprintf(TEXT_SECURITY_CHECK_FAIL[$securityStatus]) . ($securityStatus == 'unknown' ? sprintf(TEXT_SECURITY_UNKNOWN_LINK, 'inc/access_check.txt') : ''), 'danger');
+                            zipAlert(sprintf(TEXT_SECURITY_CHECK_FAIL[$securityStatus]) . ($securityStatus == 'unknown' && file_exists($inc_directory . '/access_check.txt') ? sprintf(TEXT_SECURITY_UNKNOWN_LINK, 'inc/access_check.txt') : ''), 'danger');
                             if ($securityStatus === 'unknown') {
-                                zipAlert('<form action="' . htmlspecialchars($_SERVER['REQUEST_URI']) . '" method="post">' . sprintf(TEXT_SECURITY_CHECKED_AND_OK, zipField('checkbox', 'security_check', 0, [], '', '', '', '', 0, '', 0, true)) . '<input type="hidden" name="csrf_token" value="' . htmlspecialchars(zipurCsrfToken(), ENT_QUOTES, 'UTF-8') . '"/><button type="submit" class="btn btn-warning">' . TEXT_BUTTON_SECURITY_CHECK . '</button></form>', 'danger');
+                                if (! file_exists($inc_directory . '/security.json') || ! file_exists($inc_directory . '/access_check.txt')) {
+                                    zipAlert(TEXT_SECURITY_TEST_FILE_MISSING, 'danger');
+                                } else {
+                                    zipAlert('<form action="' . htmlspecialchars($_SERVER['REQUEST_URI']) . '" method="post">' . sprintf(TEXT_SECURITY_CHECKED_AND_OK, zipField('checkbox', 'security_check', 0, [], '', '', '', '', 0, '', 0, true)) . '<input type="hidden" name="csrf_token" value="' . htmlspecialchars(zipurCsrfToken(), ENT_QUOTES, 'UTF-8') . '"/><button type="submit" class="btn btn-warning">' . TEXT_BUTTON_SECURITY_CHECK . '</button></form>', 'danger');
+                                }
                             }
                             $msg = '';
                             if ($webserver !== 'unknown') {

@@ -24,19 +24,48 @@
 
 @include_once(__DIR__ . DIRECTORY_SEPARATOR . 'pro_functions.php');
 
-const GO_PRO_LINK = 'https://cartmart.uk/contact_us.php?subject=I%20want%20to%20GO%20PRO%20with%20the%20Upgrader%20Utility&enquiry=Please%20provide%20details%20on%20how%20I%20can%20upgrade%20to%20the%20Pro%20version.%0A%0AThank%20you!';
+const CO_OP_LINK = 'https://phoenixcart.org/forum/viewforum.php?f=39';
+const GO_PRO_LINK = 'https://cartmart.uk/phoenix-upgrader-proco-p-28.html';
 
 if (! function_exists('proButton')) {
     function proButton($text, $class = 'info', $link = '', $icon = '', $size = 'lg', $id = '', $params = []) {
         static $i = 0;
         $i++;
-        return zipButton(sprintf(TEXT_PRO_FEATURE, $text), TEXT_GO_PRO_COLOUR, GO_PRO_LINK, $icon, $size, 'gopro' . $i, ['newwindow' => true]);
+        return zipButton(sprintf(TEXT_PRO_FEATURE, $text), TEXT_GO_PRO_COLOUR, '#', $icon, $size, 'gopro' . $i, ['toggle' => 'modal', 'target' => '#goProModal', 'bs-toggle' => 'modal', 'bs-target' => '#goProModal']);
     }
 }
 
 if (! function_exists('totemplatePopup')) {
     function totemplatePopup() {
         return;
+    }
+}
+
+if (! function_exists('goProPopup')) {
+    function goProPopup() {
+        $heading = TEXT_PRO_CO_OP_HEADER;
+        $coop_text = sprintf(TEXT_CO_OP_BLURB, CO_OP_LINK);
+        $buy_direct_text = sprintf(TEXT_BUY_DIRECT, GO_PRO_LINK);
+        $close = TEXT_CLOSE;
+        return <<<EOD
+        <div class="modal fade" id="goProModal" tabindex="-1" aria-labelledby="goProModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="goProModalLabel">{$heading}</h5>
+                        <button type="button" class="btn-close" data-dismiss="modal" data-bs-dismiss="modal" aria-label="Close">X</button>
+                    </div>
+                    <div class="modal-body">
+                        {$coop_text}
+                        {$buy_direct_text}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal" data-bs-dismiss="modal">{$close}</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+EOD;
     }
 }
 
@@ -1800,13 +1829,36 @@ var mergeHTMLPlugin = (function () {
                     //alert('Worklist updated successfully');
                     diffModal.hide();
                     if (data.entrystatus) {
-                      const statusBadge = document.getElementById(`worklist_${index}`);
-                      if (data.entrystatus === 'complete') {
-                          statusBadge.className = '<?= TEXT_WORKLIST_DONE ?>';
-                      } else if (data.entrystatus === 'todo') {
-                          statusBadge.className = '<?= TEXT_WORKLIST_TO_DO ?>';
-                      } else {
-                          statusBadge.className = '';
+                      const statusBadge = document.getElementById('worklist_' + index);
+                      const statusButton = document.getElementById('worklistitem_' + index);
+                      if (statusBadge) {
+                          if (data.entrystatus === 'complete') {
+                              statusBadge.className = '<?= TEXT_WORKLIST_DONE ?>';
+                          } else if (data.entrystatus === 'todo') {
+                              statusBadge.className = '<?= TEXT_WORKLIST_TO_DO ?>';
+                          } else {
+                              statusBadge.className = '';
+                          }
+                      }
+                      if (statusButton) {
+                        // reset button colour
+                        statusButton.classList.remove('btn-<?= TEXT_WORKLIST_DONE_COLOUR ?>', 'btn-<?= TEXT_WORKLIST_TO_DO_COLOUR ?>');
+                        if (data.entrystatus === 'complete') {
+                            statusButton.classList.add('btn-<?= TEXT_WORKLIST_DONE_COLOUR ?>');
+                        } else {
+                            statusButton.classList.add('btn-<?= TEXT_WORKLIST_TO_DO_COLOUR ?>');
+                        }
+                        const statusIcon = statusButton.querySelector('i');
+                        if (statusIcon) {
+                            statusIcon.classList.remove('fa-<?= TEXT_WORKLIST_DONE_ICON ?>', 'fa-<?= TEXT_WORKLIST_TO_DO_ICON ?>', 'fa-question-circle');
+                            if (data.entrystatus === 'complete') {
+                                statusIcon.classList.add('fa-<?= TEXT_WORKLIST_DONE_ICON ?>');
+                            } else if (data.entrystatus === 'todo') {
+                                statusIcon.classList.add('fa-<?= TEXT_WORKLIST_TO_DO_ICON ?>');
+                            } else {
+                                statusIcon.classList.add('fa-question-circle');
+                            }
+                        }
                       }
                     }
                 } else if (data.error) {
@@ -1840,7 +1892,7 @@ var mergeHTMLPlugin = (function () {
             //alert('Worklist updated successfully');
             diffModal.hide();
             if (data.entrystatus) {
-                const statusBadge = document.getElementById(`worklist_${index}`);
+                const statusBadge = document.getElementById('worklist_' + index);
                 if (data.entrystatus === 'complete') {
                     statusBadge.className = '<?= TEXT_WORKLIST_DONE ?>';
                 } else if (data.entrystatus === 'todo') {
@@ -1961,6 +2013,8 @@ function diff_prettyLines(diff) {
             e.preventDefault();
             const filename = this.getAttribute('data-file');
             const index = this.getAttribute('data-index');
+            const corepath = this.getAttribute('data-corepath');
+            const corefile = this.getAttribute('data-corefile');
 
             document.getElementById('entryModalTitle').textContent = filename;
 
@@ -1970,7 +2024,7 @@ function diff_prettyLines(diff) {
                     'Content-Type': 'application/x-www-form-urlencoded',
                     'Accept': 'application/json',
                 },
-                body: `action=load&file=${encodeURIComponent(filename)}&index=${encodeURIComponent(index)}&csrf_token=${encodeURIComponent(window.zipurCsrfToken)}`,
+                body: `action=load&file=${encodeURIComponent(filename)}&corepath=${encodeURIComponent(corepath)}&corefile=${encodeURIComponent(corefile)}&index=${encodeURIComponent(index)}&csrf_token=${encodeURIComponent(window.zipurCsrfToken)}`,
             })
                 .then(response => response.json())
                 .then(data => {
@@ -2021,13 +2075,36 @@ function diff_prettyLines(diff) {
                     //alert('Worklist updated successfully');
                     entryModal.hide();
                     if (data.entrystatus) {
-                      const statusBadge = document.getElementById(`workitem_${index}`);
-                      if (data.entrystatus === 'complete') {
-                          statusBadge.className = '<?= TEXT_WORKLIST_DONE ?>';
-                      } else if (data.entrystatus === 'todo') {
-                          statusBadge.className = '<?= TEXT_WORKLIST_TO_DO ?>';
-                      } else {
-                          statusBadge.className = '';
+                      const statusBadge = document.getElementById('worklist_' + index);
+                      const statusButton = document.getElementById('worklistitem_' + index);
+                      if (statusBadge) {
+                          if (data.entrystatus === 'complete') {
+                              statusBadge.className = '<?= TEXT_WORKLIST_DONE ?>';
+                          } else if (data.entrystatus === 'todo') {
+                              statusBadge.className = '<?= TEXT_WORKLIST_TO_DO ?>';
+                          } else {
+                              statusBadge.className = '';
+                          }
+                      }
+                      if (statusButton) {
+                        // reset button colour
+                        statusButton.classList.remove('btn-<?= TEXT_WORKLIST_DONE_COLOUR ?>', 'btn-<?= TEXT_WORKLIST_TO_DO_COLOUR ?>');
+                        if (data.entrystatus === 'complete') {
+                            statusButton.classList.add('btn-<?= TEXT_WORKLIST_DONE_COLOUR ?>');
+                        } else {
+                            statusButton.classList.add('btn-<?= TEXT_WORKLIST_TO_DO_COLOUR ?>');
+                        }
+                        const statusIcon = statusButton.querySelector('i');
+                        if (statusIcon) {
+                            statusIcon.classList.remove('fa-<?= TEXT_WORKLIST_DONE_ICON ?>', 'fa-<?= TEXT_WORKLIST_TO_DO_ICON ?>', 'fa-question-circle');
+                            if (data.entrystatus === 'complete') {
+                                statusIcon.classList.add('fa-<?= TEXT_WORKLIST_DONE_ICON ?>');
+                            } else if (data.entrystatus === 'todo') {
+                                statusIcon.classList.add('fa-<?= TEXT_WORKLIST_TO_DO_ICON ?>');
+                            } else {
+                                statusIcon.classList.add('fa-question-circle');
+                            }
+                        }
                       }
                     }
                 } else if (data.error) {
@@ -2040,6 +2117,47 @@ function diff_prettyLines(diff) {
                   alert('Error updating worklist entry: ' + error);
               });
       }
+
+      if (e.target && e.target.matches('.changefiles')) {
+          const action = e.target.getAttribute('data-action');
+          const filename = e.target.getAttribute('data-file');
+        const corepath = e.target.getAttribute('data-corepath');
+        const corefile = e.target.getAttribute('data-corefile');
+          const index = e.target.getAttribute('data-index');
+          // handle the action (template/revert) for the worklist entry
+          fetch('sitefile.php', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/x-www-form-urlencoded',
+              },
+              body: `action=${encodeURIComponent(action)}&file=${encodeURIComponent(filename)}&corepath=${encodeURIComponent(corepath)}&corefile=${encodeURIComponent(corefile)}&index=${encodeURIComponent(index)}&worklist_entry=${encodeURIComponent(document.getElementById('worklist_entry').value)}&csrf_token=${encodeURIComponent(window.zipurCsrfToken)}`,
+          })                
+        .then(response => response.json())
+        .then(data => {
+        // add some positive feedback
+        if (data.success) {
+            //alert('Worklist updated successfully');
+            diffModal.hide();
+            if (data.entrystatus) {
+                const statusBadge = document.getElementById('worklist_' + index);
+                if (data.entrystatus === 'complete') {
+                    statusBadge.className = '<?= TEXT_WORKLIST_DONE ?>';
+                } else if (data.entrystatus === 'todo') {
+                    statusBadge.className = '<?= TEXT_WORKLIST_TO_DO ?>';
+                } else {
+                    statusBadge.className = '';
+                }
+            }
+        } else if (data.error) {
+            alert('Error: ' + data.error);
+        }
+        })
+        .catch(error => {
+            console.error('Error updating worklist entry:', error);
+            // add some error feedback
+            alert('Error updating worklist entry: ' + error);
+        });
+    } 
 
     });
     worklistForm.addEventListener('submit', function(e) {

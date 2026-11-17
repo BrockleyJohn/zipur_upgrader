@@ -28,8 +28,11 @@
     const TEXT_WELCOME_MESSAGE = 'This utility will allow you to upgrade your CE Phoenix install from an older version to the latest version of CE Phoenix. You will be shown all of the files from your current install that you have modified and then you can decide how to proceed with an upgrade.';
 
     const TEXT_SUPPORT_LINK = '<a href="%s" target="_blank" class="btn btn-info mt-2"><i class="fas fa-life-ring"></i> Get Help</a>';
-
+    const TEXT_PRO_BUTTON = '<button class="btn btn-primary mt-2 ml-2" data-target="#goProModal" data-bs-target="#goProModal" data-toggle="modal" data-bs-toggle="modal"><i class="fas fa-unlock-alt"></i> Go Pro</button>';
     const TEXT_PRO_FEATURE = '%s<small><br>PRO feature. To access GO PRO.</small>';
+    const TEXT_PRO_CO_OP_HEADER = 'Join Phoenix Code Co-op or Buy Pro direct';
+    const TEXT_CO_OP_BLURB = '<p>The Pro version with additional features is available free in the <a href="%s" target="_blank">Phoenix Code Co-op</a>.<br>A small monthly subscription gets you access to loads of additional add-ons. Bargain!</p>';
+    const TEXT_BUY_DIRECT = '<p>You can also purchase the Pro version directly from Cartmart:<br><a href="%s" target="_blank">Buy Pro Version</a></p>';
     const TEXT_EXCEPTION_OCCURRED = 'An uncaught exception occurred: %s';
 
     const TEXT_BACKUP_WARNING = 'MAKE SURE YOU HAVE COMPLETED A RECENT BACKUP OF YOUR DATA AND YOUR FILES BEFORE PROCEEDING.';
@@ -41,6 +44,7 @@
         'vulnerable' => 'SECURITY CHECK FAILED. It is IMPERATIVE that you secure the upgrader inc folder from public access.<br><br>When you have made this change, please refresh the page to continue.',
         'unknown' => 'SECURITY CHECK COULD NOT BE AUTOMATED. Please try this button to check the security status of the upgrader inc folder. If the file contents beginning <em>"If you can read this file"</em> are not displayed, you can mark it secure manually:<br><br>'
     ];
+    const TEXT_SECURITY_TEST_FILE_MISSING = '<i class="fas fa-exclamation-triangle"></i> Addon is incomplete - security test file(s) missing. Please ensure that the files upgrader/inc/security.json and upgrader/inc/access_check.txt exist.';
     const TEXT_SECURITY_UNKNOWN_LINK = '<a href="%s" target="_blank" class="btn btn-warning mt-2"><i class="fas fa-question-circle"></i> Check Security Status</a>';
     const TEXT_DETECTED_WEB_SERVER = 'We have detected that you appear to be running under %s<br><br>';
     const TEXT_NOT_DETECTED_WEB_SERVER = 'We could not detect whether your server is running Apache or Nginx.<br><br>';
@@ -81,6 +85,8 @@
     const TEXT_LOGIN_FAILED   = 'LOGIN FAILED';
 
     const MYSQL_PORT = 3306;
+
+    const TEXT_FIXED_INSECURE_PERMISSION = 'Fixed insecure permission for %s';
 
     const TEXT_STEP_02_DESCRIPTION = 'Now that you have your password set, you are ready to start upgrading your CE Phoenix store.<br/><br/>There are several steps to this process and this utility will walk you through what is required.';
 
@@ -191,6 +197,7 @@
     const TEXT_SITE_FILE_BACKED_UP = 'Site file backed up successfully';
     const TEXT_REVERT_TO_CORE_FAILED = 'Failed to revert site file to core version';
 
+    const TEXT_WORKLIST_COMPARISON_UNAVAILABLE = 'Core comparison not available';
     const TEXT_CORE_CHANGE_OVERRIDDEN = 'OVERRIDDEN BY<br>%s';
     const TEXT_CORE_CHANGE_SHOULD_OVERRIDE = 'MOVE TO TEMPLATE';
     const TEXT_WORKLIST_TO_TEMPLATE = 'Move Changes to Template';
@@ -214,11 +221,14 @@
     const TEXT_WORKLIST_NEW_COLOUR = 'danger';
     const TEXT_WORKLIST_EXPECTED_COLOUR = 'info';
     const TEXT_WORKLIST_TO_DO_COLOUR = 'warning';
+    const TEXT_WORKLIST_TO_TEMPLATE_COLOUR = 'warning';
     const TEXT_WORKLIST_DONE_ICON = 'check-circle';
     const TEXT_WORKLIST_NEW_ICON = 'plus-square';
     const TEXT_WORKLIST_EXPECTED_ICON = 'info-circle';
     const TEXT_WORKLIST_TO_DO_ICON = 'hourglass-half';
     const TEXT_WORKLIST_TO_TEMPLATE_ICON = 'sitemap';
+    
+    define('TEXT_WORKLIST_TO_TEMPLATE_STYLE', 'fas fa-' . TEXT_WORKLIST_TO_TEMPLATE_ICON . ' text-' . TEXT_WORKLIST_TO_TEMPLATE_COLOUR);
     
     define('TEXT_WORKLIST_DONE', 'fas fa-' . TEXT_WORKLIST_DONE_ICON . ' text-' . TEXT_WORKLIST_DONE_COLOUR);
     define('TEXT_WORKLIST_NEW', 'fas fa-' . TEXT_WORKLIST_NEW_ICON . ' text-' . TEXT_WORKLIST_NEW_COLOUR);
@@ -255,4 +265,4 @@
 
     const TEXT_ALL_DONE_LINK_ADMIN = 'Visit the Security Check page in your admin area, and fix any warnings that show.';
     const TEXT_ALL_DONE = 'Congratulations, your upgrade is completed. If you have custom mods/hooks that need to be installed you will have to do those manually. You should login to your CE Phoenix Admin and run a Security Check as well as test your store to make sure there are no issues with the new version and your additional files.';
-    const TEXT_DONATE   = 'At PhoenixAddons.com, we work hard to bring you tools like this. <br/>If you are happy with this tool and the upgrade process and would like us to continue providing <br/>tools like this ... please consider donating what you feel the tool is worth.';
+    const TEXT_DONATE   = '';

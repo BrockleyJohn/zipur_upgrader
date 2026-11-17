@@ -30,6 +30,7 @@
         sleep(2);//allow file to be saved before refreshing next step otherwise may see pre-save result
     }
 
+    echo goProPopup();
 ?>
 <footer class="col mt-3 d-print-none">
     <div class="card bg-light p-0 pt-3 mb-3 card-body text-center">
