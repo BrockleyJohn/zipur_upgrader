@@ -792,6 +792,11 @@ EOD;
             return true;
         }
 
+        // check for default template files
+        if (strpos($filename, DIRECTORY_SEPARATOR . 'templates' . DIRECTORY_SEPARATOR . 'default' . DIRECTORY_SEPARATOR) === 0) {
+            return true;
+        }
+
         return false;
     }
 
@@ -837,6 +842,13 @@ EOD;
 
         // check for classes
 
+        // check for default template files
+        if (strpos($filename, DIRECTORY_SEPARATOR . 'templates' . DIRECTORY_SEPARATOR . 'default' . DIRECTORY_SEPARATOR) === 0) {
+            if (($override_location = overrideLocation($filename)) && file_exists($override_location)) {
+                return str_replace( $GLOBALS['config']['cep_files']['root'], '', $override_location );
+            }
+        }
+
         return false;
     }
 
@@ -869,6 +881,11 @@ EOD;
     // check for pages
 
     // check for classes
+
+    // check for default template files
+    if (strpos($filename, DIRECTORY_SEPARATOR . 'templates' . DIRECTORY_SEPARATOR . 'default' . DIRECTORY_SEPARATOR) === 0) {
+        return $GLOBALS['config']['cep_files']['root'] . str_replace(  DIRECTORY_SEPARATOR . 'templates' . DIRECTORY_SEPARATOR . 'default' . DIRECTORY_SEPARATOR, DIRECTORY_SEPARATOR . 'templates' . DIRECTORY_SEPARATOR . strtolower($GLOBALS['set_template']) . DIRECTORY_SEPARATOR, $filename);
+    }
 
     if (! empty($type)) {
         return $template_class::_get_template_mapping_for($filename, $type);

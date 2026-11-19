@@ -161,6 +161,8 @@
 
                                     } else {
 
+                                        //error_log("Upgrade requirement not met: requires {$upgrade['settings']['requires']}, current version {$cep_version}, next version {$next_version}");
+
                                         zipAlert( TEXT_NO_MEET_REQUIREMENT_UPGRADES, 'success');
 
                                     }

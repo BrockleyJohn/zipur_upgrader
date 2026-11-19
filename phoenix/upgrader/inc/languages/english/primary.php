@@ -28,6 +28,7 @@
     const TEXT_WELCOME_MESSAGE = 'This utility will allow you to upgrade your CE Phoenix install from an older version to the latest version of CE Phoenix. You will be shown all of the files from your current install that you have modified and then you can decide how to proceed with an upgrade.';
 
     const TEXT_SUPPORT_LINK = '<a href="%s" target="_blank" class="btn btn-info mt-2"><i class="fas fa-life-ring"></i> Get Help</a>';
+    const TEXT_PRO_SUPPORT_LINK = '<a href="%s" target="_blank" class="btn btn-info mt-2"><i class="fas fa-life-ring"></i> Co-op Members</a> <a href="%s" target="_blank" class="btn btn-info mt-2"><i class="fas fa-life-ring"></i> Pro Purchasers</a>';
     const TEXT_PRO_BUTTON = '<button class="btn btn-primary mt-2 ml-2" data-target="#goProModal" data-bs-target="#goProModal" data-toggle="modal" data-bs-toggle="modal"><i class="fas fa-unlock-alt"></i> Go Pro</button>';
     const TEXT_PRO_FEATURE = '%s<small><br>PRO feature. To access GO PRO.</small>';
     const TEXT_PRO_CO_OP_HEADER = 'Join Phoenix Code Co-op or Buy Pro direct';

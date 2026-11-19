@@ -2,8 +2,9 @@
 
     /*
 
- Version: 2.1.2
+ Version: 2.1.3
  Name: Zipur CE Phoenix Upgrade Utility
+ v2.1.3 2026-11-17 add overridden/move to template for changes in default template files
  v2.1.2 2026-11-01 extract additional definitions for step 10, support module template overrides
  v2.1.1 2026-10-22 add diffs to step 10, worklist to step 11, template checking language files
 
@@ -158,7 +159,8 @@
                 /*error_log('cep_version ' . print_r($cep_version, true));
                 error_log('compare result ' . version_compare( "{$config['next_version']}", "{$cep_version}" )); */
 
-                if ( ! empty( $config['next_version'] ) && version_compare( "{$config['next_version']}", "{$cep_version}" ) > 0 && is_dir( __DIR__ . '/versions/' . $config['next_version'] )) {
+                // ensure next version is reset if current version has changed (copes with overwriting includes/version.php)
+                if ( ! empty( $config['current_version'] ) && $config['current_version'] == $cep_version && ! empty( $config['next_version'] ) && version_compare( "{$config['next_version']}", "{$cep_version}" ) > 0 && is_dir( __DIR__ . '/versions/' . $config['next_version'] )) {
                     $next_version = $config['next_version'];
                 } else {
                     /* foreach ( $versions as $ver_check ) {
@@ -194,6 +196,10 @@
                             $next_version = $cep_version; // fallback to current version
                         }
                     }
+                    $config['next_version'] = $next_version;
+                    $config['current_version'] = $cep_version;
+                    $save_changes = 1;
+
                 }
 
                 $admin_folder = str_replace( $config['cep_files']['root'] . DIRECTORY_SEPARATOR, '', $config['cep_files']['admin'] );
